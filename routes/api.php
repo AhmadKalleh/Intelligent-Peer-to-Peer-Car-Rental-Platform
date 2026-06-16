@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +14,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::controller(AuthController::class)->group(function ()
+{
+    Route::post('/register',     [AuthController::class, 'register']);
+    Route::post('/login',        [AuthController::class, 'login']);
+    Route::post('/googleLogin',  [AuthController::class, 'googleLogin']);
+    Route::post('/verify_code',  [AuthController::class, 'verify_code']);
+    Route::post('/resend-code',  [AuthController::class, 'resend_code']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Protected routes that require authentication
+
+
 });
