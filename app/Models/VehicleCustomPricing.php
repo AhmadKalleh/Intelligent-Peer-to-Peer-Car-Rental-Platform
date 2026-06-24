@@ -14,22 +14,19 @@ class VehicleCustomPricing extends Model
         'vehicle_id',
         'date_from',
         'date_to',
-        'custom_price',
+        'price_per_day',
         'reason',
     ];
 
     protected $casts = [
-        'date_from'    => 'date',
-        'date_to'      => 'date',
-        'custom_price' => 'decimal:2',
+        'date_from' => 'date',
+        'date_to' => 'date',
     ];
 
-    // =====================
-    //      Relationships
-    // =====================
-
+    // السعر المخصص ينتمي لمركبة
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
     }
+
 }

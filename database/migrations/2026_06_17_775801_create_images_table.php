@@ -10,17 +10,15 @@ return new class extends Migration
     {
         Schema::create('images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('vehicle_id')->constrained('vehicles')->onDelete('cascade');
+            $table->nullableMorphs('imageable');
             $table->string('path');
-            $table->string('url')->nullable();
+            $table->smallInteger('sort_order')->default(0);
             $table->boolean('is_primary')->default(false);
-            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->enum('type',['vehicle_image','mechanic_booklet','driving_license','profile_image']);
             $table->timestamps();
 
             // Indexes
-            $table->index('vehicle_id');
-            $table->index(['vehicle_id', 'is_primary']);
-            $table->index('sort_order');
+            $table->index('is_primary');
         });
     }
 

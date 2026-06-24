@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('vehicle_id')->constrained('vehicles')->onDelete('cascade');
             $table->date('date_from');
             $table->date('date_to');
-            $table->decimal('custom_price', 10, 2);
+            $table->decimal('price_per_day', 10, 2);
             $table->text('reason')->nullable();     // weekend / holiday / event
             $table->timestamps();
 

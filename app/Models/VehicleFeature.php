@@ -13,7 +13,6 @@ class VehicleFeature extends Model
     protected $fillable = [
         'vehicle_id',
         'feature_name',
-        'feature_value',
     ];
 
     // =====================

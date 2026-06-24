@@ -11,14 +11,13 @@ return new class extends Migration
         Schema::create('vehicle_features', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vehicle_id')->constrained('vehicles')->onDelete('cascade');
-            $table->string('feature_name');       // GPS, Bluetooth, AirConditioning...
-            $table->string('feature_value')->nullable(); // yes/no or extra info
+            $table->foreignId('feature_id')->constrained('features')->onDelete('cascade');       // GPS, Bluetooth, AirConditioning...
             $table->timestamps();
 
             // Indexes
+            $table->unique(['vehicle_id', 'feature_id']);
             $table->index('vehicle_id');
-            $table->index('feature_name');
-            $table->unique(['vehicle_id', 'feature_name']);
+            $table->index('feature_id');
         });
     }
 

@@ -15,19 +15,16 @@ class VehicleAvailability extends Model
         'available_from',
         'available_to',
         'is_blocked',
-        'note',
+        'block_reason',
     ];
 
     protected $casts = [
         'available_from' => 'date',
-        'available_to'   => 'date',
-        'is_blocked'     => 'boolean',
+        'available_to' => 'date',
+        'is_blocked' => 'boolean',
     ];
 
-    // =====================
-    //      Relationships
-    // =====================
-
+    // فترة التوفر تنتمي لمركبة
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);

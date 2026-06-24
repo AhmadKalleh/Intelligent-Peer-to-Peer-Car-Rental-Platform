@@ -310,35 +310,7 @@ class RolesPermissionsSeeder extends Seeder
         );
 
 
-        // ══ 5.2 Host ═════════════════════════════════════
-        $switch_user = User::query()->create([
-            'full_name'         => 'Switch User',
-            'email'             => 'switch@carrental.sy',
-            'password'     => Hash::make('password'),
-            'status'            => 'active',
-            'auth_provider'      => 'local',
-            'email_verified_at' => now(),
-        ]);
-
-        $switch_user->host()->create([
-            'total_earnings'      => 0,
-            'available_balance'   => 0,
-            'rating_avg'          => null,
-            'total_trips'         => 0,
-            'delivery_available'  => true,
-            'delivery_fee_per_km' => 500.00,   // 500 SYP/km
-            'is_verified'         => true,
-            'verified_at'         => now(),
-        ]);
-
-        // يحمل الدورين معاً
-        $switch_user->assignRole($guest_role);
-        $switch_user->assignRole($host_role);
-        $switch_user->givePermissionTo(array_unique(array_merge(
-            $guest_role->permissions()->pluck('name')->toArray(),
-            $host_role->permissions()->pluck('name')->toArray(),
-        )));
-
+        // ══ 5.2 Host ════════════════════════════════════
 
         // ══ 5.3 Guest ════════════════════════════════════
         $guest_user = User::query()->create([

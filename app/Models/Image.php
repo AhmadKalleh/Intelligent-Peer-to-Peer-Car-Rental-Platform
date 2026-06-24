@@ -4,31 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Image extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'vehicle_id',
+        'imageable_type',
+        'imageable_id',
         'path',
-        'url',
-        'is_primary',
         'sort_order',
+        'is_primary',
+        'type'
     ];
 
     protected $casts = [
-        'is_primary'  => 'boolean',
-        'sort_order'  => 'integer',
+        'is_primary' => 'boolean',
     ];
 
-    // =====================
-    //      Relationships
-    // =====================
-
-    public function vehicle(): BelongsTo
+    // جلب الموديل الأب الذي تتبع له الصورة ديناميكياً
+    public function imageable(): MorphTo
     {
-        return $this->belongsTo(Vehicle::class);
+        return $this->morphTo();
     }
 }
