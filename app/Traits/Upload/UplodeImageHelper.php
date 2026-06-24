@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Traits\Upload;
-
+use Illuminate\Support\Str;
 
 trait UplodeImageHelper
 {
@@ -17,7 +17,8 @@ trait UplodeImageHelper
             ]);
         }
 
-        $filename = $file->getClientOriginalName();
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+
         $path = $file->storeAs($folderName, $filename, 'public');
 
         return $path;

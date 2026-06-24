@@ -40,4 +40,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Host::class);
     }
+
+    public function recentSearches()
+    {
+        return $this->hasMany(RecentSearch::class)->latest('searched_at');
+    }
+
+    public function image()
+    {
+        return $this->morphOne(Image::class, 'imageable');
+    }
 }

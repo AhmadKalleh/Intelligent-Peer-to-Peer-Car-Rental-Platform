@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,12 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(User::class)->constrained('users')->cascadeOnDelete();
+            $table->string('type'); // booking_confirmed, message, etc.
+            $table->string('title');
+            $table->text('body')->nullable();
+            $table->index('user_id');
+            $table->index('type');
             $table->timestamps();
         });
     }
