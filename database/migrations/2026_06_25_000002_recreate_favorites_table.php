@@ -6,16 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * favorites:
-     *   - user_id       → المستخدم (Guest) الذي أضاف المفضلة
-     *   - vehicle_id    → السيارة المضافة إلى المفضلة
-     *   - created_at    → تاريخ الإضافة (يُستخدم للترتيب)
-     */
     public function up(): void
     {
+        // نحذف الجدول القديم الفارغ ونستبدله بالجديد
+        Schema::dropIfExists('favorites');
+
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
@@ -24,20 +19,16 @@ return new class extends Migration
             $table->foreignId('vehicle_id')
                   ->constrained('vehicles')
                   ->cascadeOnDelete();
+            $table->foreignId('favorite_list_id')
+                  ->constrained('favorite_lists')
+                  ->cascadeOnDelete();
             $table->timestamps();
 
-            // منع تكرار نفس السيارة في مفضلة نفس المستخدم
-            $table->unique(['user_id', 'vehicle_id']);
-
-            // فهارس لتسريع الاستعلامات
-            $table->index('user_id');
-            $table->index('vehicle_id');
+            // لا يمكن إضافة نفس السيارة في نفس الليستا مرتين
+            $table->unique(['user_id', 'vehicle_id', 'favorite_list_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('favorites');

@@ -10,6 +10,8 @@ use App\Repositories\Vehicle\Interfaces\VehicleQueryRepositoryInterface;
 
 
 use App\Repositories\Auth\AuthRepository;
+use App\Repositories\Favorite\FavoriteRepository;
+use App\Repositories\Favorite\Interfaces\FavoriteRepositoryInterface;
 use App\Repositories\Feature\FeatureRepository;
 use App\Repositories\Vehicle\VehicelAdminRepository;
 use App\Repositories\Vehicle\VehicelCommandRepository;
@@ -28,6 +30,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(VehicleCommandRepositoryInterface::class, VehicelCommandRepository::class);
         $this->app->bind(VehicleAdminRepositoryInterface::class, VehicelAdminRepository::class);
         $this->app->bind(FeatureRepositoryInterface::class, FeatureRepository::class);
+        $this->app->bind(FavoriteRepositoryInterface::class,FavoriteRepository::class);
+
     }
 
     public function boot(): void
