@@ -1,0 +1,20 @@
+.dashboardLayout {
+  min-height: 100vh;
+  display: flex;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 255, 255, 0.08),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #07111b 0%, #02070d 100%);
+  color: #eaf7ff;
+}
+
+.mainContent {
+  flex: 1;
+  min-height: 100vh;
+  padding: 32px;
+  margin-left: 280px;
+  overflow-x: hidden;
+}

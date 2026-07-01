@@ -1,0 +1,33 @@
+* {
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg-dark);
+  overflow-x: hidden;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  background: #02070d;
+  overflow-x: hidden;
+}
