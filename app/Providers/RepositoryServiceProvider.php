@@ -4,18 +4,29 @@ namespace App\Providers;
 
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\Auth\Interfaces\AuthRepositoryInterface;
+<<<<<<< HEAD
 use App\Repositories\Complaint\Admin\ComplaintAdminRepository;
 use App\Repositories\Complaint\ComplaintRepository;
 use App\Repositories\Complaint\Interfaces\ComplaintAdminRepositoryInterface;
 use App\Repositories\Complaint\Interfaces\ComplaintRepositoryInterface;
+=======
+>>>>>>> origin/develop
 use App\Repositories\Favorite\FavoriteRepository;
 use App\Repositories\Favorite\Interfaces\FavoriteRepositoryInterface;
 use App\Repositories\Feature\FeatureRepository;
 use App\Repositories\Feature\Interfaces\FeatureRepositoryInterface;
 use App\Repositories\User\Admin\UserAdminRepository;
+<<<<<<< HEAD
 use App\Repositories\User\Guest\UserImageRepository;
 use App\Repositories\User\Host\UserHostRepository;
 use App\Repositories\User\Interfaces\UserAdminRepositoryInterface;
+=======
+use App\Repositories\User\Guest\UserGuestRepository;
+use App\Repositories\User\Guest\UserImageRepository;
+use App\Repositories\User\Host\UserHostRepository;
+use App\Repositories\User\Interfaces\UserAdminRepositoryInterface;
+use App\Repositories\User\Interfaces\UserGuestRepositoryInterface;
+>>>>>>> origin/develop
 use App\Repositories\User\Interfaces\UserHostRepositoryInterface;
 use App\Repositories\User\Interfaces\UserImageRepositoryInterface;
 use App\Repositories\Vehicle\Interfaces\VehicleAdminRepositoryInterface;
@@ -47,11 +58,16 @@ class RepositoryServiceProvider extends ServiceProvider
         // ── User Management ───────────────────────────────────────────────────
         $this->app->bind(UserAdminRepositoryInterface::class, UserAdminRepository::class);
         $this->app->bind(UserHostRepositoryInterface::class,  UserHostRepository::class);
+<<<<<<< HEAD
         $this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
 
         // ── Complaints ────────────────────────────────────────────────────────
         $this->app->bind(ComplaintRepositoryInterface::class,      ComplaintRepository::class);
         $this->app->bind(ComplaintAdminRepositoryInterface::class, ComplaintAdminRepository::class);
+=======
+        $this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
+        $this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
+>>>>>>> origin/develop
     }
 
     public function boot(): void

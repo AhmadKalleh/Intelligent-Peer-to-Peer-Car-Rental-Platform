@@ -9,13 +9,7 @@ use App\Http\Controllers\Api\Feature\FeatureController;
 use App\Http\Controllers\Api\Vehicle\AdminVehicleController;
 use App\Http\Controllers\Api\Vehicle\HostVehicleController;
 use App\Http\Controllers\Api\Vehicle\VehicleController;
-use App\Http\Controllers\Api\Favorite\FavoriteController;
-use App\Http\Controllers\Api\User\AdminUserController;
-use App\Http\Controllers\Api\User\HostUserController;
-use App\Http\Controllers\Api\User\GuestUserController;
-use App\Http\Controllers\Api\Complaint\AdminComplaintController;
-use App\Http\Controllers\Api\Complaint\HostComplaintController;
-use App\Http\Controllers\Api\Complaint\GuestComplaintController;
+use App\Http\Controllers\Api\Favorite\FavoriteController;   // ← جديد
 use App\Models\VehicleAvailability;
 use Illuminate\Support\Facades\Route;
 
@@ -60,15 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put ('vehicles/{id}/pricing',      [HostVehicleController::class, 'updatePricing']);
         Route::put ('vehicles/{id}/features',     [HostVehicleController::class, 'updateFeatures']);
         Route::post('vehicles/{id}/coupons',      [HostVehicleController::class, 'storeCoupon']);
-
-        // ── Host Profile ──────────────────────────────────────────────────
-        Route::post('profile/image', [HostUserController::class, 'updateProfileImage']);
-        Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails']);
-        Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword']);
-
-        // ── Host Complaints ─────────────────────────────────────────────────
-        Route::post('complaints',         [HostComplaintController::class, 'submitComplaint']);
-        Route::get ('complaints/reasons', [HostComplaintController::class, 'getComplaintReasons']);
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -80,13 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get   ('vehicles/nearby',   [VehicleController::class, 'nearby']);
         Route::delete('vehicles/location', [VehicleController::class, 'resetLocation']);
 
-
-        // ── Guest Profile ─────────────────────────────────────────────────
-        Route::post('profile/image', [GuestUserController::class, 'updateProfileImage']);
-        Route::post('guests/change-password', [HostUserController::class, 'changeHostPassword']);
-
-
-        // ─── Favorites ────────────────────────────────────────────────────
+        // ─── favorites ────────────────────────────────────────────────────────────
         Route::prefix('favorites')->group(function () {
             Route::get   ('lists',        [FavoriteController::class, 'getAllLists']);
             Route::post  ('lists',        [FavoriteController::class, 'createList']);
@@ -112,20 +91,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get ('vehicles/show',    [AdminVehicleController::class, 'showPending']);
         Route::post('vehicles/approve', [AdminVehicleController::class, 'approve']);
         Route::post('vehicles/reject',  [AdminVehicleController::class, 'reject']);
-
-        // ── User Management ───────────────────────────────────────────────
-        Route::get   ('users',                 [AdminUserController::class, 'getUsers']);
-        Route::post  ('users',                 [AdminUserController::class, 'addUser']);
-        Route::post  ('users/promote-to-host', [AdminUserController::class, 'promoteGuestToHost']);
-        Route::post  ('users/toggle-status',   [AdminUserController::class, 'toggleGuestStatus']);
-        Route::delete('users/guest',           [AdminUserController::class, 'deleteGuest']);
-        Route::delete('users/host',            [AdminUserController::class, 'deleteHost']);
-        Route::post  ('users/profile/image',   [AdminUserController::class, 'updateProfileImage']);
-
-        // ── Complaints Management ───────────────────────────────────────────
-        Route::get ('complaints',                   [AdminComplaintController::class, 'getComplaints']);
-        Route::post('complaints/reply',              [AdminComplaintController::class, 'replyToComplaint']);
-        Route::get ('complaints/unanswered-count',   [AdminComplaintController::class, 'countUnanswered']);
     });
 });
 
