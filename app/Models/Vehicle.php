@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+
 class Vehicle extends Model
 {
     use HasFactory;
@@ -46,12 +47,13 @@ class Vehicle extends Model
     ];
 
     protected $casts = [
-        'snoozed_until' => 'datetime',
-        'reviewed_at' => 'datetime',
+        'snoozed_until'      => 'datetime',
+        'reviewed_at'        => 'datetime',
         'delivery_available' => 'boolean',
     ];
 
-    // المركبة تنتمي لمضيف
+    // ─── Relations ───────────────────────────────────────────
+
     public function host(): BelongsTo
     {
         return $this->belongsTo(Host::class);
@@ -62,31 +64,26 @@ class Vehicle extends Model
         return $this->morphOne(Image::class, 'imageable')->where('is_primary', true);
     }
 
-    // المركبة تمت مراجعتها من قِبل مسؤول (مستخدم)
     public function adminReviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
     }
 
-    // المركبة تملك العديد من الميزات
     public function features(): BelongsToMany
     {
         return $this->belongsToMany(Feature::class, 'vehicle_features');
     }
 
-    // المركبة تملك العديد من الأسعار المخصصة
     public function customPricings(): HasMany
     {
         return $this->hasMany(VehicleCustomPricing::class);
     }
 
-    // المركبة تملك فترات توفر متعددة
     public function availabilities(): HasMany
     {
         return $this->hasMany(VehicleAvailability::class);
     }
 
-    // علاقة متعددة الأشكال لجلب صور المركبة
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
@@ -98,10 +95,24 @@ class Vehicle extends Model
                     ->where('type', 'mechanic_booklet');
     }
 
-    public function reviews():HasMany
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
+
+    // ← جديد: الحجوزات (مطلوبة لحساب حالة السيارة في المفضلة)
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    // ← جديد: المفضلة
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    // ─── Scopes ──────────────────────────────────────────────
 
     public function scopeWithCurrentPrice($query)
     {
