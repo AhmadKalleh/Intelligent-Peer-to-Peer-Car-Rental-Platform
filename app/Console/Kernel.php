@@ -2,8 +2,6 @@
 
 namespace App\Console;
 
-use App\Jobs\BroadcastAvailabilityRemindersJob;
-use App\Jobs\BroadcastExpireVehicleAvailabilitiesJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -14,9 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->job(new BroadcastAvailabilityRemindersJob)->everyMinute();
-
-        $schedule->job(new BroadcastExpireVehicleAvailabilitiesJob)->everyMinute();
+        // $schedule->command('inspire')->hourly();
     }
 
     /**

@@ -3,8 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Models\Vehicle;
-use App\Observers\VehicleObserver;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -12,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        
+        //
     }
 
     /**
