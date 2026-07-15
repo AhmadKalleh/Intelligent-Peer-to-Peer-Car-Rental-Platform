@@ -20,6 +20,7 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
     {
         VehicleAvailability::query()
             ->with(['vehicle.host.user'])
+            ->where('type', 'available')
             ->where('available_to', '<', now())
             ->where('is_blocked', false)
             ->chunkById(100, function ($availabilities) {
@@ -32,6 +33,7 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
                 VehicleAvailability::whereIn('id', $expiredIds)->update([
                     'is_blocked'   => true,
                     'block_reason' => 'expired_by_system',
+                    'blocked_by' => 'system',
                     'updated_at'   => now(),
                 ]);
 
@@ -50,6 +52,7 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
                 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 $vehiclesWithActiveAvailability = VehicleAvailability::query()
                     ->whereIn('vehicle_id', $vehicleIds)
+                    ->where('type', 'available')
                     ->where('available_to', '>=', now())
                     ->where('is_blocked', false)
                     ->pluck('vehicle_id')
@@ -64,7 +67,7 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
 
                 if ($vehiclesToUnlist->isNotEmpty()) {
                     Vehicle::whereIn('id', $vehiclesToUnlist->pluck('id')->toArray())
-                        ->where('listing_status', 'listed')
+                        ->whereIn('listing_status', ['listed', 'snoozed'])
                         ->update([
                             'listing_status' => 'unlisted',
                             'updated_at'     => now(),

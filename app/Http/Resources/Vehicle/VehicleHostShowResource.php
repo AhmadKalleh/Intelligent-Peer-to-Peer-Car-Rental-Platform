@@ -37,9 +37,6 @@ class VehicleHostShowResource extends JsonResource
                 'listing_status'         => $this->listing_status,
                 'admin_review_status'    => $this->admin_review_status,
                 'admin_rejection_reason' => $this->admin_rejection_reason,
-                'snoozed_until' => $this->snoozed_until
-                    ? 'Snoozed Until '.$this->snoozed_until->toDateTimeString()
-                    : null,
 
                 'reviewed_at' => $this->reviewed_at
                     ? 'Reviewed at '.$this->reviewed_at->format('M Y')
@@ -102,17 +99,7 @@ class VehicleHostShowResource extends JsonResource
             // // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             // // الفقرة السابعة: الإتاحة
             // // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            'availability_info' => [
-                'availabilities' => $this->whenLoaded('availabilities', fn() =>
-                    $this->availabilities->map(fn($a) => [
-                        'id'             => $a->id,
-                        'available_from' => $a->available_from->toDateString(),
-                        'available_to'   => $a->available_to->toDateString(),
-                        'is_blocked'     => (bool) $a->is_blocked,
-                        'block_reason'   => $a->block_reason,
-                    ])
-                ),
-            ],
+            'availability_info' => $this->buildAvailabilityInfo(),
 
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             // الفقرة الثامنة: الإحصائيات
@@ -197,6 +184,120 @@ class VehicleHostShowResource extends JsonResource
 
             // ─── Insights ────────────────────────────────
             'insights' => $insights,
+        ];
+    }
+
+    private function buildAvailabilityInfo(): array
+    {
+        $availabilities = $this->whenLoaded('availabilities', fn() =>
+            $this->availabilities
+        );
+
+        if (!$availabilities || $availabilities->isEmpty()) {
+            return [
+                'status'        => 'no_availability',
+                'message'       => 'No availability set for this vehicle.',
+                'action'        => 'Please set an availability period for your vehicle.',
+                'availabilities'=> [],
+            ];
+        }
+
+        // ── جلب سجل الإتاحة الأساسي (type=available) ─────────
+        $mainAvailability = $availabilities->firstWhere('type', 'available');
+
+        // ── جلب سجلات الحجب ──────────────────────────────────
+        $snoozeRecords  = $availabilities->where('type', 'snoozed');
+        $bookingRecords = $availabilities->where('type', 'booking_block');
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // تحديد حالة الإتاحة الرئيسية
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        $mainStatus = $this->resolveMainAvailabilityStatus($mainAvailability);
+
+        return [
+            // ─── الحالة العامة ────────────────────────────────
+            'status'  => $mainStatus['status'],
+            'message' => $mainStatus['message'],
+            'action'  => $mainStatus['action'],
+
+            // ─── الإتاحة الرئيسية ─────────────────────────────
+            'main_availability' => $mainAvailability ? [
+                'id'             => $mainAvailability->id,
+                'available_from' => $mainAvailability->available_from->toDateString(),
+                'available_to'   => $mainAvailability->available_to->toDateString(),
+                'is_blocked'     => (bool) $mainAvailability->is_blocked,
+                'blocked_by'     => $mainAvailability->blocked_by,
+                'block_reason'   => $mainAvailability->block_reason,
+            ] : null,
+
+            // ─── فترات الـ Snooze ─────────────────────────────
+            'snooze_periods' => $snoozeRecords->map(fn($s) => [
+                'id'             => $s->id,
+                'available_from' => $s->available_from->toDateString(),
+                'available_to'   => $s->available_to->toDateString(),
+                'block_reason'   => $s->block_reason,
+                'status'         => match(true) {
+                    now()->between($s->available_from, $s->available_to) => 'active',
+                    now()->lt($s->available_from)                        => 'upcoming',
+                    default                                               => 'expired',
+                },
+            ])->values(),
+
+            // ─── فترات الحجز ──────────────────────────────────
+            'booking_blocks' => $bookingRecords->map(fn($b) => [
+                'id'             => $b->id,
+                'available_from' => $b->available_from->toDateString(),
+                'available_to'   => $b->available_to->toDateString(),
+                'block_reason'   => $b->block_reason,
+            ])->values(),
+        ];
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Helper: تحديد حالة الإتاحة الرئيسية
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    private function resolveMainAvailabilityStatus($mainAvailability): array
+    {
+        if (!$mainAvailability) {
+            return [
+                'status'  => 'no_availability',
+                'message' => 'No availability period set.',
+                'action'  => 'Please add an availability period to list your vehicle.',
+            ];
+        }
+
+        // ── محجوب من النظام ───────────────────────────────────
+        if ($mainAvailability->is_blocked && $mainAvailability->blocked_by === 'system') {
+            return [
+                'status'  => 'expired_by_system',
+                'message' => 'Your availability period has expired. Your vehicle has been unlisted automatically.',
+                'action'  => 'Please update your availability period to relist your vehicle.',
+            ];
+        }
+
+        // ── محجوب من الهوست ──────────────────────────────────
+        if ($mainAvailability->is_blocked && $mainAvailability->blocked_by === 'host') {
+            return [
+                'status'  => 'blocked_by_host',
+                'message' => 'You have manually blocked this vehicle.',
+                'action'  => 'You can unblock your vehicle by updating the availability.',
+            ];
+        }
+
+        // ── منتهي التاريخ لكن لم يُحجب بعد ──────────────────
+        if ($mainAvailability->available_to->lt(now())) {
+            return [
+                'status'  => 'expired',
+                'message' => 'Your availability period has ended.',
+                'action'  => 'Please update your availability period.',
+            ];
+        }
+
+        // ── نشط ───────────────────────────────────────────────
+        return [
+            'status'  => 'active',
+            'message' => 'Your vehicle is currently available for booking.',
+            'action'  => null,
         ];
     }
 }

@@ -16,7 +16,8 @@ class Image extends Model
         'path',
         'sort_order',
         'is_primary',
-        'type'
+        'type',
+        'hash'
     ];
 
     protected $casts = [
