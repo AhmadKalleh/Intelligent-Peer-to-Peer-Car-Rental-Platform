@@ -28,6 +28,7 @@ class BroadcastAvailabilityRemindersJob implements ShouldQueue
     public function handle(): void
     {
         VehicleAvailability::whereDate('available_to', '=', now()->addDay()->toDateString())
+            ->where('type', 'available')
             ->where('is_blocked', false)
             ->chunkById(100, function ($items) {
 

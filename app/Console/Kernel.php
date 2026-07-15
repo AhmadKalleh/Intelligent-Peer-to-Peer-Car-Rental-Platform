@@ -14,9 +14,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->job(new BroadcastAvailabilityRemindersJob)->everyMinute();
+        $schedule->job(new BroadcastAvailabilityRemindersJob)->everyTenMinutes();
 
-        $schedule->job(new BroadcastExpireVehicleAvailabilitiesJob)->everyMinute();
+        $schedule->job(new BroadcastExpireVehicleAvailabilitiesJob)->everyTenMinutes();
     }
 
     /**

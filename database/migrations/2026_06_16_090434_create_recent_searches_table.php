@@ -15,20 +15,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
-            // حقول الفلترة والبحث
-            $table->string('city', 100)->nullable();
-            $table->string('airport_code', 10)->nullable();
-            $table->decimal('lat', 10, 7)->nullable();         // إذا search_type = current_location
-            $table->decimal('lng', 10, 7)->nullable();
             $table->enum('search_type', [
-                'current_location',
+                'location',
                 'anywhere',
-                'city',
-                'airport',
             ]);
-            // تسجيل وقت البحث (يأخذ الوقت الحالي تلقائياً)
+
+            // ✅ فقط lat/lng لكل الأنواع
+            $table->decimal('lat', 10, 7)->nullable();
+            $table->decimal('lng', 10, 7)->nullable();
+
             $table->timestamp('searched_at')->useCurrent();
-            // الفهارس لضمان أداء عالي وسريع عند الاستعلام
+
             $table->index('user_id');
             $table->index('searched_at');
             $table->timestamps();

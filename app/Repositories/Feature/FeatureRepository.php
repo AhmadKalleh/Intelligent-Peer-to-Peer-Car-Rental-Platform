@@ -26,7 +26,7 @@ class FeatureRepository implements FeatureRepositoryInterface
 
         $features = Feature::query()
             ->select(['id', 'name'])
-            ->orderBy('name')
+            ->orderBy('id')
             ->get();
 
         Redis::setex($this->cacheKey, 3600, $features->toJson());

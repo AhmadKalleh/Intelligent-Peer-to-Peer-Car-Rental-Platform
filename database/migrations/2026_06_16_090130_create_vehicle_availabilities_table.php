@@ -14,7 +14,13 @@ return new class extends Migration
             $table->date('available_from');
             $table->date('available_to');
             $table->boolean('is_blocked')->default(false); // لتحديد فترات الحجب
+            $table->enum('type', [
+                'available',      // إتاحة عادية من الهوست
+                'snoozed',        // حجب من الهوست
+                'booking_block',  // حجب تلقائي عند الحجز
+            ])->default('available');
             $table->text('block_reason')->nullable();
+            $table->enum('blocked_by',['system','host'])->nullable();
             $table->timestamps();
 
             // Indexes

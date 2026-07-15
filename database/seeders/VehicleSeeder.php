@@ -21,9 +21,7 @@ class VehicleSeeder extends Seeder
         // 1. إنشاء الحسابات والمضيفين بنسب تقييم عالية لمحاكاة خوارزمية الأفضلية و All-Star Host
         $hostsData = [
             ['name' => 'Ahmad Al-Kalleh', 'email' => 'ahmad@host.com', 'rating' => 4.95, 'trips' => 50],
-            ['name' => 'Jad Nakhle', 'email' => 'jad@host.com', 'rating' => 4.88, 'trips' => 32],
-            ['name' => 'Yara Haidar', 'email' => 'yara@host.com', 'rating' => 4.90, 'trips' => 22],
-            ['name' => 'Haifaa Sami', 'email' => 'haifaa@host.com', 'rating' => 4.50, 'trips' => 12]
+            
         ];
 
 
@@ -152,7 +150,7 @@ class VehicleSeeder extends Seeder
                         ]);
                     }
 
-                    Image::create(['imageable_type' => Vehicle::class, 'imageable_id' => $vehicle->id, 'path' => "vehicles/Audi-E-Tron.png", 'sort_order' => 0, 'is_primary' => true]);
+                    Image::create(['imageable_type' => Vehicle::class, 'imageable_id' => $vehicle->id, 'hash' =>'1234', 'path' => "vehicles/Audi-E-Tron.png", 'sort_order' => 0, 'is_primary' => true]);
                 }
             }
         }

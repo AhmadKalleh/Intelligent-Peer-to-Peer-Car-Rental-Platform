@@ -22,7 +22,6 @@ return new class extends Migration
             $table->smallInteger('seats');
             $table->string('plate_number',30)->unique();
             $table->enum('listing_status', ['listed', 'snoozed', 'unlisted'])->default('unlisted');
-            $table->timestampTz('snoozed_until')->nullable();
             $table->enum('admin_review_status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('admin_rejection_reason')->nullable();
             $table->timestampTz('reviewed_at')->nullable();
