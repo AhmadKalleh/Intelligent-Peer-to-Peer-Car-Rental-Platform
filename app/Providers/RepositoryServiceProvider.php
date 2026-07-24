@@ -30,6 +30,10 @@ use App\Repositories\Vehicle\Interfaces\VehicleQueryRepositoryInterface;
 use App\Repositories\Vehicle\VehicelAdminRepository;
 use App\Repositories\Vehicle\VehicelCommandRepository;
 use App\Repositories\Vehicle\VehicelQueryRepository;
+use App\Repositories\Coupon\CouponGuestRepository;
+use App\Repositories\Coupon\CouponHostRepository;
+use App\Repositories\Coupon\Interfaces\CouponGuestRepositoryInterface;
+use App\Repositories\Coupon\Interfaces\CouponHostRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -63,6 +67,16 @@ class RepositoryServiceProvider extends ServiceProvider
         // ── Search ────────────────────────────────────────────────────────
         $this->app->bind(SearchAdminRepositoryInterface::class,SearchAdminRepository::class);
         $this->app->bind(SearchQueryRepositoryInterface::class,SearchQueryRepository::class);
+
+        $this->app->bind(
+            CouponHostRepositoryInterface::class,
+            CouponHostRepository::class
+        );
+
+        $this->app->bind(
+            CouponGuestRepositoryInterface::class,
+            CouponGuestRepository::class
+        );
     }
 
     public function boot(): void
