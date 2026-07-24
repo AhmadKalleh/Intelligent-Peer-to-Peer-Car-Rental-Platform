@@ -46,6 +46,11 @@ class User extends Authenticatable
         return $this->hasOne(Host::class);
     }
 
+    public function couponUses(): HasMany
+    {
+        return $this->hasMany(CouponUse::class);
+    }
+
     public function recentSearches(): HasMany
     {
         return $this->hasMany(RecentSearch::class)->latest('searched_at');

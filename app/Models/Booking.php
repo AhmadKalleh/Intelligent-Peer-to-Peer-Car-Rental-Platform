@@ -13,7 +13,6 @@ class Booking extends Model
         'vehicle_id',
         'host_id',
         'user_id',
-        'coupon_id',
         'start_date',
         'end_date',
         'total_days',
@@ -78,5 +77,10 @@ class Booking extends Model
     public function review(): HasOne
     {
         return $this->hasOne(Review::class);
+    }
+
+    public function couponUse(): HasOne
+    {
+        return $this->hasOne(CouponUse::class);
     }
 }

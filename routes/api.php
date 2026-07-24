@@ -6,6 +6,8 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Complaint\GuestComplaintController;
+use App\Http\Controllers\Api\Coupon\GuestCouponController;
+use App\Http\Controllers\Api\Coupon\HostCouponController;
 use App\Http\Controllers\Api\Feature\FeatureController;
 use App\Http\Controllers\Api\Vehicle\AdminVehicleController;
 use App\Http\Controllers\Api\Vehicle\HostVehicleController;
@@ -84,6 +86,16 @@ Route::middleware('auth:sanctum')->group(function () {
         // ─── Search & Discovery ──────────────────────────────────────
         Route::get('search', [HostSearchController::class, 'search']);
 
+        // ─── Coupons ───────────────────────────────────────────────
+        Route::prefix('coupons')->group(function () {
+            Route::get   ('',              [HostCouponController::class, 'index']);
+            Route::post  ('',              [HostCouponController::class, 'store']);
+            Route::post   ('/update',          [HostCouponController::class, 'update']);
+            Route::post   ('/toggle',   [HostCouponController::class, 'toggleStatus']);
+            Route::delete('/delete',          [HostCouponController::class, 'destroy']);
+            Route::get('/uses',      [HostCouponController::class, 'showUses']);
+        });
+
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -118,6 +130,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('search')->group(function () {
             Route::get('/',       [GuestSearchController::class, 'search']);
             Route::get('filter',  [GuestSearchController::class, 'filter']);
+        });
+
+        // ─── Coupons ───────────────────────────────────────────────
+        Route::prefix('coupons')->group(function () {
+            Route::post('/validate', [GuestCouponController::class, 'validateCoupon']);
         });
 
     });
