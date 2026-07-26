@@ -1,6 +1,7 @@
 <?php
 // routes/channels.php
 
+use App\Models\Conversation;
 use App\Models\Host;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
@@ -32,4 +33,23 @@ Broadcast::channel('vehicles.listing', function (User $user) {
         'id'   => $user->id,
         'name' => $user->full_name,
     ];
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Conversation Private Channel  ← جديد
+//
+// private-conversation.{conversationId}
+//
+// يُصرَّح للمستخدم فقط إذا كان طرفاً في المحادثة
+// (guest_user_id أو host_user_id)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Broadcast::channel('conversation.{conversationId}', function (User $user, int $conversationId) {
+    $conversation = Conversation::find($conversationId);
+
+    if (! $conversation) {
+        return false;
+    }
+
+    return (int) $user->id === (int) $conversation->guest_user_id
+        || (int) $user->id === (int) $conversation->host_user_id;
 });

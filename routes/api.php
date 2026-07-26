@@ -1,21 +1,26 @@
 <?php
 
-// =====================================================================
-//  routes/api.php  — النسخة الكاملة مع دمج نظام المفضلة + User Management
-// =====================================================================
 
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Complaint\GuestComplaintController;
 use App\Http\Controllers\Api\Coupon\GuestCouponController;
 use App\Http\Controllers\Api\Coupon\HostCouponController;
 use App\Http\Controllers\Api\Feature\FeatureController;
 use App\Http\Controllers\Api\Vehicle\AdminVehicleController;
 use App\Http\Controllers\Api\Vehicle\HostVehicleController;
 use App\Http\Controllers\Api\Vehicle\VehicleController;
+use App\Http\Controllers\Api\User\AdminUserController;
+use App\Http\Controllers\Api\User\HostUserController;
+use App\Http\Controllers\Api\User\GuestUserController;
+use App\Http\Controllers\Api\Complaint\AdminComplaintController;
+use App\Http\Controllers\Api\Complaint\HostComplaintController;
+use App\Http\Controllers\Api\Complaint\GuestComplaintController;
+use App\Http\Controllers\Api\Conversation\ConversationController;
+use App\Models\VehicleAvailability;
 use App\Http\Controllers\Api\Favorite\FavoriteController;   // ← جديد
 use App\Http\Controllers\Api\Search\AdminSearchController;
 use App\Http\Controllers\Api\Search\GuestSearchController;
 use App\Http\Controllers\Api\Search\HostSearchController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -48,6 +53,39 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('vehicles/show', [VehicleController::class, 'show']);
+
+
+    // ─── Host ─────────────────────────────────────────────────────────────
+    Route::prefix('host')->middleware('role:host')->group(function () {
+        Route::get ('vehicles',                   [HostVehicleController::class, 'getHostVehicles']);
+        Route::post('vehicles',                   [HostVehicleController::class, 'store']);
+        Route::get ('vehicles/show',              [HostVehicleController::class, 'showForHost']);
+        Route::put ('vehicles/{id}/details',      [HostVehicleController::class, 'updateDetails']);
+        Route::put ('vehicles/{id}/availability', [HostVehicleController::class, 'updateAvailability']);
+        Route::put ('vehicles/{id}/pricing',      [HostVehicleController::class, 'updatePricing']);
+        Route::put ('vehicles/{id}/features',     [HostVehicleController::class, 'updateFeatures']);
+        Route::post('vehicles/{id}/coupons',      [HostVehicleController::class, 'storeCoupon']);
+
+        // ── Host Profile ──────────────────────────────────────────────────
+        Route::post('profile/image', [HostUserController::class, 'updateProfileImage']);
+        Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails']);
+        Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword']);
+
+        // ── Host Complaints ─────────────────────────────────────────────────
+        Route::post('complaints',         [HostComplaintController::class, 'submitComplaint']);
+        Route::get ('complaints/reasons', [HostComplaintController::class, 'getComplaintReasons']);
+
+        
+        // ── Host Chat ─────────────────────────────────────────────────────
+       
+        Route::prefix('chat')->group(function () {
+            Route::get ('list',     [ConversationController::class, 'list']);
+            Route::get ('show',     [ConversationController::class, 'show']);
+            Route::get ('messages', [ConversationController::class, 'messages']);
+            Route::post('send',     [ConversationController::class, 'send']);
+            Route::post('read',     [ConversationController::class, 'markAsRead']);
+            Route::get ('unread',   [ConversationController::class, 'unreadCount']);
+        });
 
     // Host
     Route::prefix('host')->middleware(['auth:sanctum'])->group(function () {
@@ -109,7 +147,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get   ('vehicles/nearby',   [VehicleController::class, 'nearby']);
         Route::delete('vehicles/location', [VehicleController::class, 'resetLocation']);
 
-        // ─── Favorites ────────────────────────────────────────────────────────────
+
+
+        // ── Guest Profile ─────────────────────────────────────────────────
+        Route::post('profile/image', [GuestUserController::class, 'updateProfileImage']);
+        Route::post('guests/change-password', [GuestUserController::class, 'changeGuestPassword']);
+        Route::get('guests/show', [GuestUserController::class, 'showGuestDetails']);
+
+
+
+        // ─── Favorites ────────────────────────────────────────────────────
+
         Route::prefix('favorites')->group(function () {
             Route::get   ('lists',        [FavoriteController::class, 'getAllLists']);
             Route::post  ('lists',        [FavoriteController::class, 'createList']);
@@ -125,6 +173,19 @@ Route::middleware('auth:sanctum')->group(function () {
         // ──  Complaints ────────────────────────────────────────────────
         Route::post('complaints',         [GuestComplaintController::class, 'submitComplaint']);
         Route::get ('complaints/reasons', [GuestComplaintController::class, 'getComplaintReasons']);
+
+
+
+        // ── Guest Chat ────────────────────────────────────────────────────
+        Route::prefix('chat')->group(function () {
+            Route::post('open',     [ConversationController::class, 'open']);
+            Route::get ('list',     [ConversationController::class, 'list']);
+            Route::get ('show',     [ConversationController::class, 'show']);
+            Route::get ('messages', [ConversationController::class, 'messages']);
+            Route::post('send',     [ConversationController::class, 'send']);
+            Route::post('read',     [ConversationController::class, 'markAsRead']);
+            Route::get ('unread',   [ConversationController::class, 'unreadCount']);
+        });
 
         // ─── Search & Discovery ─────────────────────────────────────────────
         Route::prefix('search')->group(function () {
@@ -148,8 +209,39 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('vehicles/approve', [AdminVehicleController::class, 'approve']);
         Route::post('vehicles/reject',  [AdminVehicleController::class, 'reject']);
 
+        // ── User Management ───────────────────────────────────────────────
+        Route::get   ('users',                 [AdminUserController::class, 'getUsers']);
+        Route::post  ('users',                 [AdminUserController::class, 'addUser']);
+        Route::post  ('users/promote-to-host', [AdminUserController::class, 'promoteGuestToHost']);
+        Route::post  ('users/toggle-status',   [AdminUserController::class, 'toggleGuestStatus']);
+        Route::delete('users/guest',           [AdminUserController::class, 'deleteGuest']);
+        Route::delete('users/host',            [AdminUserController::class, 'deleteHost']);
+        Route::post  ('users/profile/image',   [AdminUserController::class, 'updateProfileImage']);
+
+        // ── Complaints Management ───────────────────────────────────────────
+        Route::get ('complaints',                   [AdminComplaintController::class, 'getComplaints']);
+        Route::post('complaints/reply',              [AdminComplaintController::class, 'replyToComplaint']);
+        Route::get ('complaints/unanswered-count',   [AdminComplaintController::class, 'countUnanswered']);
+
+        
         // ──Search & Discovery ───────────────────────────────────────────────
         Route::get('search/users', [AdminSearchController::class, 'searchUsers']);
-
     });
 });
+
+Route::get('/testtt', function () {
+    $results = VehicleAvailability::query()
+        ->with(['vehicle.host.user'])
+        ->where('available_to', '<', now())
+        ->where('is_blocked', false)
+        ->get();
+
+    return response()->json([
+        'today'  => now()->toDateString(),
+        'count'  => $results->count(),
+        'data'   => $results
+    ]);
+});
+
+
+    });
