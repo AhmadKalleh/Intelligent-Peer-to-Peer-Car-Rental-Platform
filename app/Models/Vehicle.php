@@ -32,8 +32,6 @@ class Vehicle extends Model
         'admin_rejection_reason',
         'reviewed_at',
         'base_price_per_day',
-        'min_price',
-        'max_price',
         'delivery_available',
         'delivery_fee',
         'pickup_address',
@@ -152,6 +150,19 @@ class Vehicle extends Model
                 AND hosts.rating_avg >= 4.8
                 AND hosts.total_trips >= 20
             ) as is_all_star_host
+        ");
+    }
+
+    public function scopeWithDistance($query, float $lat, float $lng): void
+    {
+        $query->selectRaw("
+            ROUND(
+                6371 * acos(
+                    cos(radians({$lat})) * cos(radians(pickup_lat))
+                    * cos(radians(pickup_lng) - radians({$lng}))
+                    + sin(radians({$lat})) * sin(radians(pickup_lat))
+                ),
+            2) as distance
         ");
     }
 }

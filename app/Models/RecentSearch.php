@@ -11,8 +11,6 @@ class RecentSearch extends Model
 
     protected $fillable = [
         'user_id',
-        'city',
-        'airport_code',
         'lat',
         'lng',
         'search_type',

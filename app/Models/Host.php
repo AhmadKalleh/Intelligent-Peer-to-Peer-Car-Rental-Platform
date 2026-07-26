@@ -64,4 +64,9 @@ class Host extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class);
+    }
 }

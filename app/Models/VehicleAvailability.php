@@ -16,6 +16,8 @@ class VehicleAvailability extends Model
         'available_to',
         'is_blocked',
         'block_reason',
+        'type',
+        'blocked_by'
     ];
 
     protected $casts = [

@@ -6,23 +6,23 @@ use Illuminate\Support\Str;
 trait UplodeImageHelper
 {
 
-    public function uplodeImage($file,$folderName)
+    public function uploadImage($file, $folderName)
     {
-
         if (!$file) {
-            return response()->json([
-                'data' => [],
-                'message' => 'File not found.',
-                'status' => 400
-            ]);
+            throw new \Exception('File not found.');
         }
 
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        // حساب hash
+        $hash = hash_file('sha256', $file->getRealPath());
+
+        // اسم الملف يعتمد على hash (اختياري وذكي 🔥)
+        $filename = $hash . '.' . $file->getClientOriginalExtension();
 
         $path = $file->storeAs($folderName, $filename, 'public');
 
-        return $path;
-
+        return [
+            'path' => $path,
+            'hash' => $hash,
+        ];
     }
-
 }

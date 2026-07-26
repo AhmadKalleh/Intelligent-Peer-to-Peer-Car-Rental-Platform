@@ -19,7 +19,6 @@ return new class extends Migration
             $table->foreignIdFor(Vehicle::class)->constrained('vehicles')->cascadeOnDelete();
             $table->foreignIdFor(Host::class)->constrained('hosts')->cascadeOnDelete();
             $table->foreignIdFor(User::class)->constrained('users')->cascadeOnDelete();
-            $table->foreignId('coupon_id')->nullable()->constrained('coupons')->nullOnDelete();
             // التواريخ
             $table->date('start_date');
             $table->date('end_date');

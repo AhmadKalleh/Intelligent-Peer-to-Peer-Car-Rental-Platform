@@ -48,7 +48,6 @@ class BookingAndReviewSeeder extends Seeder
                     'vehicle_id'       => $vehicle->id,
                     'host_id'          => $vehicle->host_id,
                     'user_id'          => $guest->id,
-                    'coupon_id'        => null,
                     'start_date'       => $startDate,
                     'end_date'         => $endDate,
                     'total_days'       => $totalDays,

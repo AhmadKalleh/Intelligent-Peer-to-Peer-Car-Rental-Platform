@@ -17,7 +17,7 @@ class VehicleHostListResource extends JsonResource
             'model'                => $this->model,
             'year'                 => $this->year,
             'city'                 => $this->city,
-            'base_price_per_day'   => (float) $this->base_price_per_day,
+            'base_price_per_day' => (float) ($this->current_price),
             'listing_status'       => $this->listing_status,
             'admin_review_status'  => $this->admin_review_status,
             'total_bookings'       => (int) $this->total_bookings,

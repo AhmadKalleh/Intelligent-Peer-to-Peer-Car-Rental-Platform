@@ -17,8 +17,9 @@ class DatabaseSeeder extends Seeder
             RolesPermissionsSeeder::class,
             FeatureSeeder::class,
             VehicleSeeder::class,
-            RecentSearchSeeder::class,
             BookingAndReviewSeeder::class,
+            CouponSeeder::class,
+            CouponUseSeeder::class,
         ]);
     }
 }

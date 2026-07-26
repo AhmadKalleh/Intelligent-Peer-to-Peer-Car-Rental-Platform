@@ -15,6 +15,7 @@ return new class extends Migration
             $table->smallInteger('sort_order')->default(0);
             $table->boolean('is_primary')->default(false);
             $table->enum('type',['vehicle_image','mechanic_booklet','driving_license','profile_image']);
+            $table->string('hash')->index();
             $table->timestamps();
 
             // Indexes

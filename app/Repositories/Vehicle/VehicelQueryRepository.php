@@ -115,70 +115,68 @@ class VehicelQueryRepository implements VehicleQueryRepositoryInterface
 
     public function getRecentSearches(int $userId, int $limit = 5): Collection
     {
-        // ✅ أولاً: آخر 5 أبحاث فقط بناءً على searched_at
         $recentSearches = RecentSearch::query()
             ->where('user_id', $userId)
             ->orderByDesc('searched_at')
             ->limit($limit)
-            ->get(['search_type', 'city', 'airport_code', 'lat', 'lng']);
+            ->get(['search_type', 'lat', 'lng']);
 
         if ($recentSearches->isEmpty()) {
             return new Collection();
         }
 
-        // ✅ ثانياً: لكل بحث نجلب سيارة واحدة مناسبة له
-        $vehicles = new Collection();
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // هل يوجد بحث من نوع location؟
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        $lastLocationSearch = $recentSearches
+            ->where('search_type', 'location')
+            ->first();
 
-        foreach ($recentSearches as $search) {
-            $vehicle = Vehicle::query()
-                ->with(['primaryImage'])
-                ->select([
-                    'id', 'make', 'model', 'year', 'city',
-                    'base_price_per_day', 'rating_avg',
-                    'total_bookings', 'listing_status',
-                    'admin_review_status', 'pickup_lat', 'pickup_lng',
-                ])
-                ->where('listing_status', 'listed')
-                ->where('admin_review_status', 'approved')
-                ->when(
-                    $search->search_type === 'anywhere',
-                    fn($q) => $q
+        $baseQuery = Vehicle::query()
+            ->with(['primaryImage'])
+            ->select([
+                'id', 'make', 'model', 'year', 'city',
+                'base_price_per_day', 'rating_avg',
+                'total_bookings', 'listing_status',
+                'admin_review_status', 'pickup_lat', 'pickup_lng',
+            ])
+            ->where('listing_status', 'listed')
+            ->where('admin_review_status', 'approved');
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // السيناريو الأول: يوجد location → سيارات قريبة منه
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        if ($lastLocationSearch) {
+            return $baseQuery
+                ->selectRaw(
+                    '(6371 * acos(
+                        cos(radians(?)) * cos(radians(pickup_lat))
+                        * cos(radians(pickup_lng) - radians(?))
+                        + sin(radians(?)) * sin(radians(pickup_lat))
+                    )) AS distance',
+                    [
+                        $lastLocationSearch->lat,
+                        $lastLocationSearch->lng,
+                        $lastLocationSearch->lat,
+                    ]
                 )
-                ->when(
-                    $search->search_type === 'city',
-                    fn($q) => $q->where('city', $search->city)
-                )
-                ->when(
-                    $search->search_type === 'airport',
-                    fn($q) => $q->whereRaw(
-                        '(6371 * acos(
-                            cos(radians(?)) * cos(radians(pickup_lat))
-                            * cos(radians(pickup_lng) - radians(?))
-                            + sin(radians(?)) * sin(radians(pickup_lat))
-                        )) <= 20',
-                        [$search->lat, $search->lng, $search->lat]
-                    )
-                )
-                ->when(
-                    $search->search_type === 'current_location',
-                    fn($q) => $q->whereRaw(
-                        '(6371 * acos(
-                            cos(radians(?)) * cos(radians(pickup_lat))
-                            * cos(radians(pickup_lng) - radians(?))
-                            + sin(radians(?)) * sin(radians(pickup_lat))
-                        )) <= 50',
-                        [$search->lat, $search->lng, $search->lat]
-                    )
-                )
+                ->whereNotNull('pickup_lat')
+                ->whereNotNull('pickup_lng')
+                ->having('distance', '<=', 50)
+                ->orderBy('distance', 'asc')
                 ->orderByDesc('rating_avg')
-                ->first(); // ✅ سيارة واحدة لكل بحث
-
-            if ($vehicle) {
-                $vehicles->push($vehicle);
-            }
+                ->limit($limit)
+                ->get();
         }
 
-        return $vehicles;
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // السيناريو الثاني: كلها anywhere → الأعلى تقييماً
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        return $baseQuery
+            ->orderByDesc('rating_avg')
+            ->orderByDesc('total_bookings')
+            ->limit($limit)
+            ->get();
     }
 
     public function show(int $id): Vehicle
@@ -190,6 +188,7 @@ class VehicelQueryRepository implements VehicleQueryRepositoryInterface
                 'features',
                 'availabilities' => fn($q) => $q
                     ->where('available_from', '>=', now()->toDateString())
+                    ->where('type', 'available')
                     ->where('is_blocked', false),
                 'customPricings' => fn($q) => $q
                     ->where('date_to', '>=', now()->toDateString()),
