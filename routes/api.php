@@ -17,10 +17,11 @@ use App\Http\Controllers\Api\Complaint\GuestComplaintController;
 use App\Http\Controllers\Api\Conversation\ConversationController;
 use App\Models\VehicleAvailability;
 use App\Http\Controllers\Api\Favorite\FavoriteController;   // ← جديد
+use App\Http\Controllers\Api\Notification\NotificationController;
 use App\Http\Controllers\Api\Search\AdminSearchController;
 use App\Http\Controllers\Api\Search\GuestSearchController;
 use App\Http\Controllers\Api\Search\HostSearchController;
-
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Route;
 
 
@@ -52,43 +53,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('delete/{id}', [FeatureController::class, 'destroy']);
     });
 
+    Route::prefix('notifications')->group(function () {
+        Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+        Route::get('',              [NotificationController::class, 'index']);
+        Route::post('mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    });
+
     Route::get('vehicles/show', [VehicleController::class, 'show']);
 
 
-    // ─── Host ─────────────────────────────────────────────────────────────
-    Route::prefix('host')->middleware('role:host')->group(function () {
-        Route::get ('vehicles',                   [HostVehicleController::class, 'getHostVehicles']);
-        Route::post('vehicles',                   [HostVehicleController::class, 'store']);
-        Route::get ('vehicles/show',              [HostVehicleController::class, 'showForHost']);
-        Route::put ('vehicles/{id}/details',      [HostVehicleController::class, 'updateDetails']);
-        Route::put ('vehicles/{id}/availability', [HostVehicleController::class, 'updateAvailability']);
-        Route::put ('vehicles/{id}/pricing',      [HostVehicleController::class, 'updatePricing']);
-        Route::put ('vehicles/{id}/features',     [HostVehicleController::class, 'updateFeatures']);
-        Route::post('vehicles/{id}/coupons',      [HostVehicleController::class, 'storeCoupon']);
-
-        // ── Host Profile ──────────────────────────────────────────────────
-        Route::post('profile/image', [HostUserController::class, 'updateProfileImage']);
-        Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails']);
-        Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword']);
-
-        // ── Host Complaints ─────────────────────────────────────────────────
-        Route::post('complaints',         [HostComplaintController::class, 'submitComplaint']);
-        Route::get ('complaints/reasons', [HostComplaintController::class, 'getComplaintReasons']);
-
-        
-        // ── Host Chat ─────────────────────────────────────────────────────
-       
-        Route::prefix('chat')->group(function () {
-            Route::get ('list',     [ConversationController::class, 'list']);
-            Route::get ('show',     [ConversationController::class, 'show']);
-            Route::get ('messages', [ConversationController::class, 'messages']);
-            Route::post('send',     [ConversationController::class, 'send']);
-            Route::post('read',     [ConversationController::class, 'markAsRead']);
-            Route::get ('unread',   [ConversationController::class, 'unreadCount']);
-        });
-
     // Host
-    Route::prefix('host')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('host')->group(function () {
 
         // ─── Vehicles ────────────────────────────────────
 
@@ -137,7 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
-    Route::prefix('Guest')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('Guest')->group(function () {
 
         // ─── Vehicles ───────────────────────────────────────────────
         Route::get   ('vehicles/home',     [VehicleController::class, 'all']);
@@ -201,7 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ─── Admin ────────────────────────────────────────────────────────────
-    Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('admin')->group(function () {
 
         // ── Vehicle Management ────────────────────────────────────────────
         Route::get ('vehicles/pending', [AdminVehicleController::class, 'getPendingVehicles']);
@@ -223,25 +198,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('complaints/reply',              [AdminComplaintController::class, 'replyToComplaint']);
         Route::get ('complaints/unanswered-count',   [AdminComplaintController::class, 'countUnanswered']);
 
-        
+
         // ──Search & Discovery ───────────────────────────────────────────────
         Route::get('search/users', [AdminSearchController::class, 'searchUsers']);
     });
 });
 
-Route::get('/testtt', function () {
-    $results = VehicleAvailability::query()
-        ->with(['vehicle.host.user'])
-        ->where('available_to', '<', now())
-        ->where('is_blocked', false)
-        ->get();
 
-    return response()->json([
-        'today'  => now()->toDateString(),
-        'count'  => $results->count(),
-        'data'   => $results
-    ]);
-});
-
-
-    });

@@ -88,12 +88,7 @@ class UserAdminRepository implements UserAdminRepositoryInterface
             $user->assignRole($hostRole);
             $user->syncPermissions($hostRole->permissions->pluck('name')->toArray());
 
-            Notification::create([
-                'user_id' => $user->id,
-                'type'    => 'role_upgraded',
-                'title'   => 'Account Upgraded!',
-                'body'    => 'Your account has been upgraded to Host. You can now list vehicles on the platform.',
-            ]);
+            
 
             return [
                 'status' => 'promoted',

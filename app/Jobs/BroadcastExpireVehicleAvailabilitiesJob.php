@@ -6,6 +6,7 @@ use App\Events\AvailabilityExpiredEvent;
 use App\Models\Notification;
 use App\Models\Vehicle;
 use App\Models\VehicleAvailability;
+use App\Services\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,12 +19,13 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
 
     public function handle(): void
     {
+        $notificationService = app(NotificationService::class);
         VehicleAvailability::query()
             ->with(['vehicle.host.user'])
             ->where('type', 'available')
             ->where('available_to', '<', now())
             ->where('is_blocked', false)
-            ->chunkById(100, function ($availabilities) {
+            ->chunkById(100, function ($availabilities) use ($notificationService) {
 
                 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                 // 1. Bulk block لكل السجلات المنتهية
@@ -84,28 +86,15 @@ class BroadcastExpireVehicleAvailabilitiesJob implements ShouldQueue
 
                     if (!$hostUser) continue;
 
-                    $notifications[] = [
-                        'user_id'    => $hostUser->id,
-                        'type'       => 'availability_expired',
-                        'title'      => 'Vehicle Unlisted',
-                        'body'       => "Your vehicle {$vehicle->make} {$vehicle->model} availability has expired and has been unlisted.",
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-
-                    // ── Broadcast لكل هوست ────────────────────
-                    broadcast(new AvailabilityExpiredEvent(
-                        userId: $hostUser->id,
-                        vehicleId : $vehicle->id,
-                    ))->toOthers();
+                    $notificationService->send(
+                        userId         : $hostUser->id,
+                        type           : 'availability_expired',
+                        title          : 'Vehicle Unlisted',
+                        body           : "Your vehicle {$vehicle->make} {$vehicle->model} availability has expired and has been unlisted.",
+                        
+                    );
                 }
 
-                // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                // 6. Bulk insert notifications
-                // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                if (!empty($notifications)) {
-                    Notification::insert($notifications);
-                }
             });
     }
 }

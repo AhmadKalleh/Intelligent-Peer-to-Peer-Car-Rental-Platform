@@ -53,3 +53,8 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, int $c
     return (int) $user->id === (int) $conversation->guest_user_id
         || (int) $user->id === (int) $conversation->host_user_id;
 });
+
+// routes/channels.php
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

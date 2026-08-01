@@ -9,7 +9,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Events\AvailabilityReminderEvent;
+use App\Services\Notification\NotificationService;
+
 class BroadcastAvailabilityRemindersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -32,6 +33,8 @@ class BroadcastAvailabilityRemindersJob implements ShouldQueue
             ->where('is_blocked', false)
             ->chunkById(100, function ($items) {
 
+                $notificationService = app(NotificationService::class);
+
                 foreach ($items as $availability) {
 
                     $vehicle = $availability->vehicle;
@@ -40,18 +43,13 @@ class BroadcastAvailabilityRemindersJob implements ShouldQueue
                     $vehicleName = "{$vehicle->brand} {$vehicle->model} {$vehicle->year}";
                     $expiryDate  = $availability->available_to->format('Y-m-d');
 
-                    Notification::create([
-                        'user_id' => $user->id,
-                        'type'    => 'availability_reminder',
-                        'title'   => 'Availability Ending Soon',
-                        'body'    => "Your {$vehicleName} will no longer be available after {$expiryDate}. Please update availability to keep it listed.",
-                    ]);
+                    $notificationService->send(
+                        userId         : $user->id,
+                        type           : 'availability_reminder',
+                        title          : 'Availability Ending Soon',
+                        body           : "Your {$vehicleName} will no longer be available after {$expiryDate}. Please update availability to keep it listed.",
+                    );
 
-                    broadcast(
-                        new AvailabilityReminderEvent(
-                        $user->id,
-                        $vehicle->id
-                    ))->toOthers();
                 }
             });
     }

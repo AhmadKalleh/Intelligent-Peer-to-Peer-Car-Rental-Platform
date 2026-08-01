@@ -43,6 +43,11 @@ use App\Repositories\Coupon\CouponGuestRepository;
 use App\Repositories\Coupon\CouponHostRepository;
 use App\Repositories\Coupon\Interfaces\CouponGuestRepositoryInterface;
 use App\Repositories\Coupon\Interfaces\CouponHostRepositoryInterface;
+
+use App\Repositories\Notification\Interfaces\NotificationRepositoryInterface;
+use App\Repositories\Notification\NotificationRepository;
+
+
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -54,6 +59,7 @@ $this->app->bind(UserAdminRepositoryInterface::class, UserAdminRepository::class
 $this->app->bind(UserHostRepositoryInterface::class, UserHostRepository::class);
 $this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
 $this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
+
 
 // ── Complaints ────────────────────────────────────────────────────────
 $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
@@ -86,6 +92,10 @@ $this->app->bind(
     CouponGuestRepositoryInterface::class,
     CouponGuestRepository::class
 );
+        $this->app->bind(
+            NotificationRepositoryInterface::class,
+            NotificationRepository::class
+        );
 
     }
 
