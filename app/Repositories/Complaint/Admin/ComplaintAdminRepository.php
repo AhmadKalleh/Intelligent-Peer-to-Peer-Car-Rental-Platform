@@ -93,12 +93,6 @@ class ComplaintAdminRepository implements ComplaintAdminRepositoryInterface
                 'replied_at'  => now(),
             ]);
 
-            Notification::create([
-                'user_id' => $complaint->user_id,
-                'type'    => 'complaint_answered',
-                'title'   => 'تم الرد على شكواك',
-                'body'    => $reply,
-            ]);
 
             return [
                 'status'    => 'answered',

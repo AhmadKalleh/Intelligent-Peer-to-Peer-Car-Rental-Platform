@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('type'); // booking_confirmed, message, etc.
             $table->string('title');
             $table->text('body')->nullable();
+            $table->boolean('is_read')->default(false);
+            $table->timestamp('read_at')->nullable();
             $table->index('user_id');
             $table->index('type');
             $table->timestamps();

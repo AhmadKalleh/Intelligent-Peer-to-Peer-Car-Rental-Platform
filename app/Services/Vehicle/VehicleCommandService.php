@@ -38,8 +38,28 @@ class VehicleCommandService {
                     : 'Your vehicle has been submitted for admin review.',
                 'code'    => 201,
             ], function () use ($result, $isFirstTime) {
+
+                $notificationService = app(\App\Services\Notification\NotificationService::class);
+                $vehicle             = $result['vehicle'];
+
+                // ✅ إشعار كل الأدمنز في Service
+                $admins = \App\Models\User::role('admin')->get();
+                foreach ($admins as $admin) {
+                    $notificationService->send(
+                        userId         : $admin->id,
+                        type           : 'vehicle_pending_review',
+                        title          : $isFirstTime
+                                            ? 'New Host Registration'
+                                            : 'New Vehicle Submission',
+                        body           : $isFirstTime
+                                            ? "New host registration with vehicle {$vehicle->make} {$vehicle->model} requires your review."
+                                            : "Vehicle {$vehicle->make} {$vehicle->model} submitted for review.",
+                    );
+                }
+
+                // ✅ Broadcast للأدمن
                 BroadcastVehicleSubmittedJob::dispatch(
-                    vehicle     : $result['vehicle'],
+                    vehicle     : $vehicle,
                     isFirstTime : $isFirstTime,
                 );
             }),
@@ -50,7 +70,6 @@ class VehicleCommandService {
                 'code'    => 500,
             ],
         };
-
     }
 
     public function getHostVehicles(array $data): array

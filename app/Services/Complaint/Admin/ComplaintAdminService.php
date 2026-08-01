@@ -3,6 +3,7 @@
 namespace App\Services\Complaint\Admin;
 
 use App\Repositories\Complaint\Interfaces\ComplaintAdminRepositoryInterface;
+use App\Services\Notification\NotificationService;
 
 class ComplaintAdminService
 {
@@ -29,10 +30,27 @@ class ComplaintAdminService
     {
         $result = $this->_complaintAdminRepository->replyToComplaint($complaintId, $reply, $adminId);
 
-        return match ($result['status']) {
-            'already_answered' => ['data' => [], 'message' => 'تم الرد على هذه الشكوى مسبقاً.', 'code' => 422],
-            default             => ['data' => $result['complaint'], 'message' => 'تم إرسال الرد بنجاح.', 'code' => 200],
-        };
+        if ($result['status'] === 'already_answered') {
+            return [
+                'data'    => [],
+                'message' => 'تم الرد على هذه الشكوى مسبقاً.',
+                'code'    => 422,
+            ];
+        }
+
+        // ✅ Notification في Service
+        app(NotificationService::class)->send(
+            userId         : $result['complaint']->user_id,
+            type           : 'complaint_answered',
+            title          : 'تم الرد على شكواك',
+            body           : $reply,
+        );
+
+        return [
+            'data'    => $result['complaint'],
+            'message' => 'تم إرسال الرد بنجاح.',
+            'code'    => 200,
+        ];
     }
 
     // ─── عدد الشكاوي الغير مردود عليها ──────────────────────────────────────────

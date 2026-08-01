@@ -4,6 +4,7 @@
 namespace App\Jobs;
 
 use App\Models\Coupon;
+use App\Services\Notification\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -34,12 +35,14 @@ class ExpireCouponJob implements ShouldQueue
         $coupon->update(['is_active' => false]);
 
         // // ── إشعار الهوست ──────────────────────────────────
-        // Notification::create([
-        //     'user_id' => $coupon->host->user_id,
-        //     'type'    => 'coupon_expired',
-        //     'title'   => 'Coupon Expired',
-        //     'body'    => "Your coupon [{$coupon->code}] has expired and been deactivated.",
-        // ]);
+        $notificationService = app(NotificationService::class);
+
+        $notificationService->send(
+            userId         : $coupon->host->user_id,
+            type           : 'coupon_expired',
+            title          : 'Coupon Expired',
+            body           : "Your coupon [{$coupon->code}] has expired and been deactivated.",
+        );
 
         // ── مسح الكاش ─────────────────────────────────────
         Redis::del("host:{$this->hostId}:coupons");
