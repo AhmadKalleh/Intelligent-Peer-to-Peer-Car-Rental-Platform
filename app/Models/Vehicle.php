@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Facades\DB;
 
 class Vehicle extends Model
 {
@@ -112,22 +113,18 @@ class Vehicle extends Model
 
     // ─── Scopes ──────────────────────────────────────────────
 
-    public function scopeWithCurrentPrice($query)
-    {
-        return $query->selectRaw("
-            COALESCE(
-                (
-                    SELECT cp.price_per_day
-                    FROM vehicle_custom_pricings cp
-                    WHERE cp.vehicle_id = vehicles.id
-                    AND NOW() BETWEEN cp.date_from AND cp.date_to
-                    ORDER BY cp.date_from DESC
-                    LIMIT 1
-                ),
-                vehicles.base_price_per_day
-            ) as current_price
-        ");
-    }
+   public function scopeWithCurrentPrice($query)
+{
+    return $query->addSelect([   // ← التغيير: addSelect بدل select
+        'current_price' => DB::raw("COALESCE(
+            (SELECT cp.price_per_day FROM vehicle_custom_pricings cp
+             WHERE cp.vehicle_id = vehicles.id
+             AND NOW() BETWEEN cp.date_from AND cp.date_to
+             ORDER BY cp.date_from DESC LIMIT 1),
+            vehicles.base_price_per_day
+        )")
+    ]);
+}
 
     public function scopeWithCustomPriceStatus($query): void
     {

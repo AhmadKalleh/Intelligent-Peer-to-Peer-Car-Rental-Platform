@@ -1,6 +1,6 @@
 <?php
 
-
+use App\Http\Controllers\Api\AiChat\AiChatController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Coupon\GuestCouponController;
 use App\Http\Controllers\Api\Coupon\HostCouponController;
@@ -75,9 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('complaints',         [HostComplaintController::class, 'submitComplaint']);
         Route::get ('complaints/reasons', [HostComplaintController::class, 'getComplaintReasons']);
 
-        
+
         // ── Host Chat ─────────────────────────────────────────────────────
-       
         Route::prefix('chat')->group(function () {
             Route::get ('list',     [ConversationController::class, 'list']);
             Route::get ('show',     [ConversationController::class, 'show']);
@@ -87,38 +86,31 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get ('unread',   [ConversationController::class, 'unreadCount']);
         });
 
-    // Host
-    Route::prefix('host')->middleware(['auth:sanctum'])->group(function () {
-
-        // ─── Vehicles ────────────────────────────────────
-
-        Route::get('vehicles',              [HostVehicleController::class, 'getHostVehicles']);
-        Route::post('vehicles',             [HostVehicleController::class, 'store']);
-        Route::get('vehicles/show',         [HostVehicleController::class, 'showForHost']);
+        // ─── Vehicles (extended) ──────────────────────────────────────
         Route::post('vehicles/basic-info', [HostVehicleController::class, 'updateBasicInfo']);
 
-            // ─── Status ──────────────────────────────────────
-        Route::post('vehicles/listing-status',[HostVehicleController::class, 'updateListingStatus']);
-        Route::post('vehicles/snooze',                   [HostVehicleController::class, 'storeSnooze']);
+        // ─── Status ──────────────────────────────────────
+        Route::post('vehicles/listing-status', [HostVehicleController::class, 'updateListingStatus']);
+        Route::post('vehicles/snooze',          [HostVehicleController::class, 'storeSnooze']);
 
-            // ─── Pricing ─────────────────────────────────────
-        Route::post('vehicles/pricing',                           [HostVehicleController::class, 'updatePricing']);
-        Route::post('vehicles/custom-pricing',                   [HostVehicleController::class, 'storeCustomPricing']);
-        Route::post('vehicles/update/custom-pricing',        [HostVehicleController::class, 'updateCustomPricing']);
-        Route::delete('vehicles/delete/custom-pricing',     [HostVehicleController::class, 'destroyCustomPricing']);
+        // ─── Pricing ─────────────────────────────────────
+        Route::post  ('vehicles/pricing',                [HostVehicleController::class, 'updatePricing']);
+        Route::post  ('vehicles/custom-pricing',         [HostVehicleController::class, 'storeCustomPricing']);
+        Route::post  ('vehicles/update/custom-pricing',  [HostVehicleController::class, 'updateCustomPricing']);
+        Route::delete('vehicles/delete/custom-pricing',  [HostVehicleController::class, 'destroyCustomPricing']);
 
-            // ─── Images ──────────────────────────────────────
-        Route::post('vehicles/uploadImages',                    [HostVehicleController::class, 'uploadImages']);
-        Route::delete('vehicles/destroyImage',        [HostVehicleController::class, 'destroyImage']);
-        Route::post('vehicles/setPrimaryImage',   [HostVehicleController::class, 'setPrimaryImage']);
+        // ─── Images ──────────────────────────────────────
+        Route::post  ('vehicles/uploadImages',    [HostVehicleController::class, 'uploadImages']);
+        Route::delete('vehicles/destroyImage',    [HostVehicleController::class, 'destroyImage']);
+        Route::post  ('vehicles/setPrimaryImage', [HostVehicleController::class, 'setPrimaryImage']);
 
-            // ─── Features ──────────────────────────────────────
+        // ─── Features ──────────────────────────────────────
         Route::post('vehicles/features', [HostVehicleController::class, 'syncFeatures']);
 
-            // ─── Availability ──────────────────────────────────────
+        // ─── Availability ──────────────────────────────────────
         Route::post('vehicles/availability', [HostVehicleController::class, 'updateAvailability']);
 
-            // Location
+        // ─── Location ──────────────────────────────────────
         Route::post('vehicles/location', [HostVehicleController::class, 'updateLocation']);
 
         // ─── Search & Discovery ──────────────────────────────────────
@@ -126,14 +118,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ─── Coupons ───────────────────────────────────────────────
         Route::prefix('coupons')->group(function () {
-            Route::get   ('',              [HostCouponController::class, 'index']);
-            Route::post  ('',              [HostCouponController::class, 'store']);
-            Route::post   ('/update',          [HostCouponController::class, 'update']);
-            Route::post   ('/toggle',   [HostCouponController::class, 'toggleStatus']);
-            Route::delete('/delete',          [HostCouponController::class, 'destroy']);
-            Route::get('/uses',      [HostCouponController::class, 'showUses']);
+            Route::get   ('',        [HostCouponController::class, 'index']);
+            Route::post  ('',        [HostCouponController::class, 'store']);
+            Route::post  ('/update', [HostCouponController::class, 'update']);
+            Route::post  ('/toggle', [HostCouponController::class, 'toggleStatus']);
+            Route::delete('/delete', [HostCouponController::class, 'destroy']);
+            Route::get   ('/uses',   [HostCouponController::class, 'showUses']);
         });
-
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -148,16 +139,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('vehicles/location', [VehicleController::class, 'resetLocation']);
 
 
-
         // ── Guest Profile ─────────────────────────────────────────────────
         Route::post('profile/image', [GuestUserController::class, 'updateProfileImage']);
         Route::post('guests/change-password', [GuestUserController::class, 'changeGuestPassword']);
         Route::get('guests/show', [GuestUserController::class, 'showGuestDetails']);
 
 
-
         // ─── Favorites ────────────────────────────────────────────────────
-
         Route::prefix('favorites')->group(function () {
             Route::get   ('lists',        [FavoriteController::class, 'getAllLists']);
             Route::post  ('lists',        [FavoriteController::class, 'createList']);
@@ -170,10 +158,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get ('heart',  [FavoriteController::class, 'heartStatus']);
         });
 
-        // ──  Complaints ────────────────────────────────────────────────
+        // ── Complaints ────────────────────────────────────────────────
         Route::post('complaints',         [GuestComplaintController::class, 'submitComplaint']);
         Route::get ('complaints/reasons', [GuestComplaintController::class, 'getComplaintReasons']);
-
 
 
         // ── Guest Chat ────────────────────────────────────────────────────
@@ -198,6 +185,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/validate', [GuestCouponController::class, 'validateCoupon']);
         });
 
+        // ─── AI Chat (مساعد ذكي خاص بالضيف فقط) ────────────────────────────
+        Route::prefix('ai-chat')->group(function () {
+            Route::post('send',          [AiChatController::class, 'send']);
+            Route::get ('messages',      [AiChatController::class, 'index']);
+            Route::get ('unread-count',  [AiChatController::class, 'unreadCount']);
+            Route::post('read',          [AiChatController::class, 'markAsRead']);
+        });
     });
 
     // ─── Admin ────────────────────────────────────────────────────────────
@@ -223,8 +217,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('complaints/reply',              [AdminComplaintController::class, 'replyToComplaint']);
         Route::get ('complaints/unanswered-count',   [AdminComplaintController::class, 'countUnanswered']);
 
-        
-        // ──Search & Discovery ───────────────────────────────────────────────
+
+        // ── Search & Discovery ───────────────────────────────────────────────
         Route::get('search/users', [AdminSearchController::class, 'searchUsers']);
     });
 });
@@ -242,6 +236,3 @@ Route::get('/testtt', function () {
         'data'   => $results
     ]);
 });
-
-
-    });

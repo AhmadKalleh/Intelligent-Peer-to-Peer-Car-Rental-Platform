@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Providers;
+
+use App\Repositories\AiChat\AiChatRepository;
+use App\Repositories\AiChat\Interfaces\AiChatRepositoryInterface;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\Auth\Interfaces\AuthRepositoryInterface;
 
@@ -49,44 +52,79 @@ class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-    // ── User Management ───────────────────────────────────────────────────
-$this->app->bind(UserAdminRepositoryInterface::class, UserAdminRepository::class);
-$this->app->bind(UserHostRepositoryInterface::class, UserHostRepository::class);
-$this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
-$this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
+        $this->app->bind(
+            AuthRepositoryInterface::class,
+            AuthRepository::class
+        );
 
-// ── Complaints ────────────────────────────────────────────────────────
-$this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
-$this->app->bind(ComplaintAdminRepositoryInterface::class, ComplaintAdminRepository::class);
+        // ── User Management ───────────────────────────────────────────────────
+        $this->app->bind(UserAdminRepositoryInterface::class, UserAdminRepository::class);
+        $this->app->bind(UserHostRepositoryInterface::class, UserHostRepository::class);
+        $this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
+        $this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
 
-// ── Conversation ──────────────────────────────────────────────────────
-$this->app->bind(
-    ConversationRepositoryInterface::class,
-    ConversationRepository::class
-);
+        // ── Complaints ────────────────────────────────────────────────────────
+        $this->app->bind(ComplaintRepositoryInterface::class, ComplaintRepository::class);
+        $this->app->bind(ComplaintAdminRepositoryInterface::class, ComplaintAdminRepository::class);
 
-// ── Search ────────────────────────────────────────────────────────────
-$this->app->bind(
-    SearchAdminRepositoryInterface::class,
-    SearchAdminRepository::class
-);
+        // ── Conversation ──────────────────────────────────────────────────────
+        $this->app->bind(
+            ConversationRepositoryInterface::class,
+            ConversationRepository::class
+        );
 
-$this->app->bind(
-    SearchQueryRepositoryInterface::class,
-    SearchQueryRepository::class
-);
+        // ── Search ────────────────────────────────────────────────────────────
+        $this->app->bind(
+            SearchAdminRepositoryInterface::class,
+            SearchAdminRepository::class
+        );
 
-// ── Coupons ───────────────────────────────────────────────────────────
-$this->app->bind(
-    CouponHostRepositoryInterface::class,
-    CouponHostRepository::class
-);
+        $this->app->bind(
+            SearchQueryRepositoryInterface::class,
+            SearchQueryRepository::class
+        );
 
-$this->app->bind(
-    CouponGuestRepositoryInterface::class,
-    CouponGuestRepository::class
-);
+        // ── AI Chat (Guest ↔ AI Assistant) ─────────────────────────────────────
+        $this->app->bind(AiChatRepositoryInterface::class, AiChatRepository::class);
 
+        // ── Coupons ───────────────────────────────────────────────────────────
+        $this->app->bind(
+            CouponHostRepositoryInterface::class,
+            CouponHostRepository::class
+        );
+
+        $this->app->bind(
+            CouponGuestRepositoryInterface::class,
+            CouponGuestRepository::class
+        );
+
+        // ── Favorite ──────────────────────────────────────────────────────────
+        $this->app->bind(
+            FavoriteRepositoryInterface::class,
+            FavoriteRepository::class
+        );
+
+        // ── Feature ───────────────────────────────────────────────────────────
+        $this->app->bind(
+            FeatureRepositoryInterface::class,
+            FeatureRepository::class
+        );
+
+        // ── Vehicle ───────────────────────────────────────────────────────────
+        $this->app->bind(
+            VehicleAdminRepositoryInterface::class,
+            VehicelAdminRepository::class
+        );
+
+        $this->app->bind(
+            VehicleCommandRepositoryInterface::class,
+            VehicelCommandRepository::class
+        );
+
+        $this->app->bind(
+            VehicleQueryRepositoryInterface::class,
+            VehicelQueryRepository::class
+        );
     }
 
     public function boot(): void

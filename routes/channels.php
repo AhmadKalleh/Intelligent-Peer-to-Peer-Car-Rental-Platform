@@ -53,3 +53,7 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, int $c
     return (int) $user->id === (int) $conversation->guest_user_id
         || (int) $user->id === (int) $conversation->host_user_id;
 });
+
+Broadcast::channel('ai-chat.{userId}', function (User $user, int $userId) {
+    return $user->hasRole('guest') && (int) $user->id === (int) $userId;
+});
