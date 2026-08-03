@@ -2,6 +2,8 @@
 
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Booking\GuestBookingController;
+use App\Http\Controllers\Api\Booking\HostBookingController;
 use App\Http\Controllers\Api\Coupon\GuestCouponController;
 use App\Http\Controllers\Api\Coupon\HostCouponController;
 use App\Http\Controllers\Api\Feature\FeatureController;
@@ -40,6 +42,7 @@ Route::controller(AuthController::class)->group(function () {
     });
 });
 
+Route::get('payments/webhook', [GuestBookingController::class, 'handleWebhook']);
 // =====================
 //  Protected Routes
 // =====================
@@ -109,6 +112,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/uses',      [HostCouponController::class, 'showUses']);
         });
 
+        // ─── Host Bookings ────────────────────────────────────────
+        Route::get('bookings',      [HostBookingController::class, 'index']);
+
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -171,6 +177,16 @@ Route::middleware('auth:sanctum')->group(function () {
         // ─── Coupons ───────────────────────────────────────────────
         Route::prefix('coupons')->group(function () {
             Route::post('/validate', [GuestCouponController::class, 'validateCoupon']);
+        });
+
+        // ─── Guest Bookings ───────────────────────────────────────
+
+        Route::prefix('bookings')->group(function () {
+            Route::post('calculate',              [GuestBookingController::class, 'calculatePrice']);
+            Route::post('create',                        [GuestBookingController::class, 'createBooking']);
+            Route::get('list',                         [GuestBookingController::class, 'index']);
+            Route::delete('cancel',                 [GuestBookingController::class, 'cancelBooking']);
+            Route::get('payment-status',     [GuestBookingController::class, 'checkPayment']);
         });
 
     });
