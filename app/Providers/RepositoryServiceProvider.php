@@ -47,6 +47,10 @@ use App\Repositories\Coupon\Interfaces\CouponHostRepositoryInterface;
 use App\Repositories\Notification\Interfaces\NotificationRepositoryInterface;
 use App\Repositories\Notification\NotificationRepository;
 
+use App\Repositories\Booking\BookingGuestRepository;
+use App\Repositories\Booking\BookingHostRepository;
+use App\Repositories\Booking\Interfaces\BookingGuestRepositoryInterface;
+use App\Repositories\Booking\Interfaces\BookingHostRepositoryInterface;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -59,6 +63,7 @@ $this->app->bind(UserAdminRepositoryInterface::class, UserAdminRepository::class
 $this->app->bind(UserHostRepositoryInterface::class, UserHostRepository::class);
 $this->app->bind(UserGuestRepositoryInterface::class, UserGuestRepository::class);
 $this->app->bind(UserImageRepositoryInterface::class, UserImageRepository::class);
+
 
 
 // ── Complaints ────────────────────────────────────────────────────────
@@ -95,6 +100,16 @@ $this->app->bind(
         $this->app->bind(
             NotificationRepositoryInterface::class,
             NotificationRepository::class
+        );
+
+        $this->app->bind(
+            BookingGuestRepositoryInterface::class,
+            BookingGuestRepository::class
+        );
+
+        $this->app->bind(
+            BookingHostRepositoryInterface::class,
+            BookingHostRepository::class
         );
 
     }

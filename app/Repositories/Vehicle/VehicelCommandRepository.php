@@ -360,6 +360,7 @@ class VehicelCommandRepository implements VehicleCommandRepositoryInterface
                 'available_to'   => $snoozeUntil,
                 'is_blocked'     => true,
                 'block_reason'   => 'snoozed_by_host',
+                'blocked_by'     => 'host',
             ]);
 
             // ── إذا بدأ اليوم → نغير الحالة فوراً ───────────
