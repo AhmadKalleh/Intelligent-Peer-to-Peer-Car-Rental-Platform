@@ -46,6 +46,15 @@ use App\Repositories\Coupon\CouponGuestRepository;
 use App\Repositories\Coupon\CouponHostRepository;
 use App\Repositories\Coupon\Interfaces\CouponGuestRepositoryInterface;
 use App\Repositories\Coupon\Interfaces\CouponHostRepositoryInterface;
+
+use App\Repositories\Notification\Interfaces\NotificationRepositoryInterface;
+use App\Repositories\Notification\NotificationRepository;
+
+use App\Repositories\Booking\BookingGuestRepository;
+use App\Repositories\Booking\BookingHostRepository;
+use App\Repositories\Booking\Interfaces\BookingGuestRepositoryInterface;
+use App\Repositories\Booking\Interfaces\BookingHostRepositoryInterface;
+
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -84,10 +93,30 @@ class RepositoryServiceProvider extends ServiceProvider
             SearchQueryRepository::class
         );
 
-        // ── AI Chat (Guest ↔ AI Assistant) ─────────────────────────────────────
-        $this->app->bind(AiChatRepositoryInterface::class, AiChatRepository::class);
+        // ── AI Chat (Guest ↔ AI Assistant) ───────────────────────────────────
+        $this->app->bind(
+            AiChatRepositoryInterface::class,
+            AiChatRepository::class
+        );
 
-        // ── Coupons ───────────────────────────────────────────────────────────
+        // ── Notifications ────────────────────────────────────────────────────
+        $this->app->bind(
+            NotificationRepositoryInterface::class,
+            NotificationRepository::class
+        );
+
+        // ── Bookings ─────────────────────────────────────────────────────────
+        $this->app->bind(
+            BookingGuestRepositoryInterface::class,
+            BookingGuestRepository::class
+        );
+
+        $this->app->bind(
+            BookingHostRepositoryInterface::class,
+            BookingHostRepository::class
+        );
+
+        // ── Coupons ──────────────────────────────────────────────────────────
         $this->app->bind(
             CouponHostRepositoryInterface::class,
             CouponHostRepository::class
@@ -98,19 +127,19 @@ class RepositoryServiceProvider extends ServiceProvider
             CouponGuestRepository::class
         );
 
-        // ── Favorite ──────────────────────────────────────────────────────────
+        // ── Favorite ─────────────────────────────────────────────────────────
         $this->app->bind(
             FavoriteRepositoryInterface::class,
             FavoriteRepository::class
         );
 
-        // ── Feature ───────────────────────────────────────────────────────────
+        // ── Feature ──────────────────────────────────────────────────────────
         $this->app->bind(
             FeatureRepositoryInterface::class,
             FeatureRepository::class
         );
 
-        // ── Vehicle ───────────────────────────────────────────────────────────
+        // ── Vehicle ──────────────────────────────────────────────────────────
         $this->app->bind(
             VehicleAdminRepositoryInterface::class,
             VehicelAdminRepository::class

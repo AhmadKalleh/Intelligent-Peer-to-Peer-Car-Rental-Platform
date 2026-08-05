@@ -83,4 +83,9 @@ class Booking extends Model
     {
         return $this->hasOne(CouponUse::class);
     }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class);
+    }
 }

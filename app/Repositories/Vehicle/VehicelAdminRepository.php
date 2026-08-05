@@ -52,15 +52,7 @@ class VehicelAdminRepository implements VehicleAdminRepositoryInterface
         $user->givePermissionTo($hostRole->permissions->pluck('name')->toArray());
     }
 
-    private function sendApprovalNotification(int $userId, Vehicle $vehicle): void
-    {
-        Notification::create([
-            'user_id' => $userId,
-            'type'    => 'vehicle_approved',
-            'title'   => 'Vehicle Approved!',
-            'body'    => "Your vehicle {$vehicle->make} {$vehicle->model} has been approved.",
-        ]);
-    }
+
 
     private function buildApproveResponse(Vehicle $vehicle, int $userId, bool $isFirstTime): array
     {
@@ -92,7 +84,6 @@ class VehicelAdminRepository implements VehicleAdminRepositoryInterface
                 $this->verifyHost($host, $hostUser);
             }
 
-            $this->sendApprovalNotification($hostUser->id, $vehicle);
             $this->flushVehicleCache();
             return $this->buildApproveResponse($vehicle, $hostUser->id, $isFirstTime);
         });
@@ -175,15 +166,6 @@ class VehicelAdminRepository implements VehicleAdminRepositoryInterface
         }
     }
 
-    private function notifyRejection(int $userId, Vehicle $vehicle, string $reason): void
-    {
-        Notification::create([
-            'user_id' => $userId,
-            'type'    => 'vehicle_rejected',
-            'title'   => 'Vehicle Rejected',
-            'body'    => "Your vehicle {$vehicle->make} {$vehicle->model} was rejected. Reason: {$reason}",
-        ]);
-    }
 
     public function reject(int $vehicleId, int $adminId, string $reason): array
     {
@@ -204,8 +186,6 @@ class VehicelAdminRepository implements VehicleAdminRepositoryInterface
             } else {
                 $this->handleExistingHostRejection($vehicle, $adminId, $reason,$isFirstTime);
             }
-
-            $this->notifyRejection($hostUser->id, $vehicle, $reason);
 
             return $this->buildResponse($vehicle, $hostUser->id, $isFirstTime);
         });

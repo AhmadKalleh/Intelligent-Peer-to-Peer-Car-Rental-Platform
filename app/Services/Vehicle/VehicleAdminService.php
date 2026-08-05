@@ -5,6 +5,7 @@ namespace App\Services\Vehicle;
 
 use App\Jobs\BroadcastVehicleStatusUpdatedJob;
 use App\Repositories\Vehicle\Interfaces\VehicleAdminRepositoryInterface;
+use App\Services\Notification\NotificationService;
 
 class VehicleAdminService
 {
@@ -24,14 +25,24 @@ class VehicleAdminService
             ];
         }
 
-        // ── Pusher: إشعار الهوست لحظياً ──────────────────────
+        $message = $result['is_first_time']
+            ? 'Congratulations! Your host account is now active and your vehicle is listed.'
+            : 'Your vehicle has been approved and is now listed.';
+
+        // ✅ Notification في Service
+        app(NotificationService::class)->send(
+            userId         : $result['host_user_id'],
+            type           : 'vehicle_approved',
+            title          : 'Vehicle Approved!',
+            body           : $message,
+        );
+
+        // ✅ Broadcast في Service
         BroadcastVehicleStatusUpdatedJob::dispatch(
             vehicleId  : $vehicleId,
             hostUserId : $result['host_user_id'],
             status     : 'approved',
-            message    : $result['is_first_time']
-                ? 'Congratulations! Your host account is now active and your vehicle is listed.'
-                : 'Your vehicle has been approved and is now listed.',
+            message    : $message,
         );
 
         return [
@@ -43,7 +54,11 @@ class VehicleAdminService
 
     public function reject(array $data): array
     {
-        $result = $this->_vehicleAdminRepository->reject($data['vehicle_id'], auth()->id(), $data['reason']);
+        $result = $this->_vehicleAdminRepository->reject(
+            $data['vehicle_id'],
+            auth()->id(),
+            $data['reason']
+        );
 
         if ($result['status'] === 'not_pending') {
             return [
@@ -53,14 +68,26 @@ class VehicleAdminService
             ];
         }
 
-        // ── Pusher: إشعار الهوست لحظياً ──────────────────────
+        $message = $result['is_first_time']
+            ? 'Your host registration has been rejected. Please contact support.'
+            : "Your vehicle {$result['vehicle_make']} {$result['vehicle_model']} was rejected. Reason: {$data['reason']}";
+
+        // ✅ Notification في Service
+        app(NotificationService::class)->send(
+            userId         : $result['host_user_id'],
+            type           : 'vehicle_rejected',
+            title          : 'Vehicle Rejected',
+            body           : $message,
+            notifiableType : \App\Models\Vehicle::class,
+            notifiableId   : $data['vehicle_id'],
+        );
+
+        // ✅ Broadcast في Service
         BroadcastVehicleStatusUpdatedJob::dispatch(
             vehicleId  : $data['vehicle_id'],
             hostUserId : $result['host_user_id'],
             status     : 'rejected',
-            message    : $result['is_first_time']
-                ? 'Your host registration has been rejected. Please contact support.'
-                : "Your vehicle {$result['vehicle_make']} {$result['vehicle_model']} was rejected. Reason: {$data['reason']}",
+            message    : $message,
         );
 
         return [

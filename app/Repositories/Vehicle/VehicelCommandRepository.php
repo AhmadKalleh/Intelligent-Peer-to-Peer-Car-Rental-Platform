@@ -196,27 +196,10 @@ class VehicelCommandRepository implements VehicleCommandRepositoryInterface
             $this->attachImages($vehicle, $data);
             $this->attachAvailability($vehicle, $data);
 
-            $this->notifyAdmins($vehicle, $isFirstTime);
             $this->flushPendingCache();
 
             return $this->buildStoreResponse($vehicle, $host, $isFirstTime);
         });
-    }
-
-    private function notifyAdmins(Vehicle $vehicle, bool $isFirstTime): void
-    {
-        $admins = \App\Models\User::role('admin')->get();
-
-        foreach ($admins as $admin) {
-            Notification::create([
-                'user_id' => $admin->id,
-                'type'    => 'vehicle_pending_review',
-                'title'   => $isFirstTime ? 'New Host Registration' : 'New Vehicle Submission',
-                'body'    => $isFirstTime
-                    ? "New host registration with vehicle {$vehicle->make} {$vehicle->model} requires your review."
-                    : "Vehicle {$vehicle->make} {$vehicle->model} submitted for review.",
-            ]);
-        }
     }
 
     private function buildStoreResponse(Vehicle $vehicle, $host, bool $isFirstTime): array
@@ -377,6 +360,7 @@ class VehicelCommandRepository implements VehicleCommandRepositoryInterface
                 'available_to'   => $snoozeUntil,
                 'is_blocked'     => true,
                 'block_reason'   => 'snoozed_by_host',
+                'blocked_by'     => 'host',
             ]);
 
             // ── إذا بدأ اليوم → نغير الحالة فوراً ───────────

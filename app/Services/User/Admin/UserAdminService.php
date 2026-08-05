@@ -3,6 +3,7 @@
 namespace App\Services\User\Admin;
 
 use App\Repositories\User\Interfaces\UserAdminRepositoryInterface;
+use App\Services\Notification\NotificationService;
 
 class UserAdminService
 {
@@ -30,9 +31,33 @@ class UserAdminService
         $result = $this->_userAdminRepository->promoteGuestToHost($userId);
 
         return match ($result['status']) {
-            'not_guest'    => ['data' => [], 'message' => 'User is not a guest.',           'code' => 422],
-            'already_host' => ['data' => [], 'message' => 'User is already a host.',        'code' => 422],
-            default        => ['data' => $result['user'], 'message' => 'Guest promoted to host successfully.', 'code' => 200],
+            'not_guest' => [
+                'data'    => [],
+                'message' => 'User is not a guest.',
+                'code'    => 422,
+            ],
+
+            'already_host' => [
+                'data'    => [],
+                'message' => 'User is already a host.',
+                'code'    => 422,
+            ],
+
+            default => (function () use ($result) {
+                // ✅ الإشعار
+                app(NotificationService::class)->send(
+                    userId         : $result['user']->id,
+                    type           : 'role_upgraded',
+                    title          : 'Account Upgraded!',
+                    body           : 'Your account has been upgraded to Host. You can now list vehicles on the platform.',
+                );
+
+                return [
+                    'data'    => $result['user'],
+                    'message' => 'Guest promoted to host successfully.',
+                    'code'    => 200,
+                ];
+            })(),
         };
     }
 

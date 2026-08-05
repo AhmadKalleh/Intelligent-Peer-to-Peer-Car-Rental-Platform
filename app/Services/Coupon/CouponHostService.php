@@ -4,6 +4,7 @@ namespace App\Services\Coupon;
 
 use App\Http\Resources\Coupon\CouponHostResource;
 use App\Jobs\ExpireCouponJob;
+use App\Jobs\NotifyGuestsAboutCouponJob;
 use App\Repositories\Coupon\Interfaces\CouponHostRepositoryInterface;
 use Illuminate\Support\Facades\Redis;
 
@@ -71,6 +72,14 @@ class CouponHostService
         // ── تحديث الكاش ───────────────────────────────────
         $this->clearCache($hostId);
 
+        NotifyGuestsAboutCouponJob::dispatch(
+            couponId     : $coupon->id,
+            hostId       : $hostId,
+            couponCode   : $coupon->code,
+            discountType : $coupon->discount_type,
+            discountValue: (float) $coupon->discount_value,
+            validUntil   : $coupon->valid_until?->toDateTimeString(),
+        );
         return [
             'data'    => $coupon,
             'message' => 'Coupon created successfully.',
