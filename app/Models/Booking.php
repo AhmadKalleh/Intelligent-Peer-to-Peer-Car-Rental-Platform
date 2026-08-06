@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
@@ -29,6 +30,8 @@ class Booking extends Model
         'status',
         'cancellation_reason',
         'cancelled_by',
+        'picked_up_at', // ← جديد
+        'returned_at',  // ← جديد
     ];
 
     protected $casts = [
@@ -43,6 +46,8 @@ class Booking extends Model
         'total_amount'       => 'decimal:2',
         'delivery_lat'       => 'decimal:7',
         'delivery_lng'       => 'decimal:7',
+        'picked_up_at'       => 'datetime', // ← جديد
+        'returned_at'        => 'datetime', // ← جديد
     ];
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -87,5 +92,11 @@ class Booking extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    // ← جديد: كل عمليات الاستلام/التسليم الخاصة بهذا الحجز
+    public function handovers(): HasMany
+    {
+        return $this->hasMany(VehicleHandover::class);
     }
 }

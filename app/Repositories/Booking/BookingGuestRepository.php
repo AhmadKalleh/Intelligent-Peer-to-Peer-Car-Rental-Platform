@@ -169,18 +169,22 @@ class BookingGuestRepository implements BookingGuestRepositoryInterface
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // SHOW
+    // CURRENT BOOKING 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function show(int $bookingId, int $userId): Booking
+   
+    public function currentBooking(int $userId): ?Booking
     {
         return Booking::with([
-            'vehicle.primaryImage',
-            'host.user',
-            'payment',
-            'couponUse.coupon',
-        ])
-        ->where('user_id', $userId)
-        ->findOrFail($bookingId);
+                'vehicle.primaryImage',
+                'host.user',
+                'payment',
+                'handovers' => fn($q) => $q->where('status', 'pending')->latest(),
+            ])
+            ->where('user_id', $userId)
+            ->whereIn('status', ['confirmed', 'active'])
+            ->where('end_date', '>=', now()->toDateString())
+            ->orderBy('start_date')
+            ->first();
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

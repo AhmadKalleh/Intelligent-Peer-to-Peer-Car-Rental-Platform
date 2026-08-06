@@ -95,5 +95,18 @@ class GuestBookingController extends Controller
         }
     }
 
+    // ─── GET /api/Guest/bookings/current ← جديد ────────────────
+    // يرجّع الحجز الحالي (اللي بحاجة استلام أو تسليم الآن) للمستأجر
+    public function currentBooking(): JsonResponse
+    {
+        $data = [];
+        try {
+            $result = $this->_bookingGuestService->currentBooking();
+            return $this->Success($result['data'], $result['message'], $result['code']);
+        } catch (Throwable $e) {
+            return $this->Error($data, $e->getMessage(), 500);
+        }
+    }
+
 
 }

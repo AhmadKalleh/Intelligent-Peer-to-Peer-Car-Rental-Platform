@@ -39,6 +39,19 @@ class BookingGuestResource extends JsonResource
                 'lng'      => $this->delivery_lng,
             ],
 
+            // ─── الاستلام والتسليم ← جديد ───────────────────
+            'handover' => [
+                'picked_up_at' => $this->picked_up_at?->format('M d, Y H:i'),
+                'returned_at'  => $this->returned_at?->format('M d, Y H:i'),
+                // كود قيد الانتظار حاليًا (إن وُجد) بدون كشف الكود نفسه
+                'pending' => $this->whenLoaded('handovers', fn() =>
+                    $this->handovers->isNotEmpty() ? [
+                        'type'       => $this->handovers->first()->type,
+                        'expires_at' => $this->handovers->first()->expires_at,
+                    ] : null
+                ),
+            ],
+
             // ─── السيارة ──────────────────────────────────
             'vehicle' => $this->whenLoaded('vehicle', fn() => [
                 'id'    => $this->vehicle->id,
