@@ -55,6 +55,12 @@ use App\Repositories\Booking\BookingHostRepository;
 use App\Repositories\Booking\Interfaces\BookingGuestRepositoryInterface;
 use App\Repositories\Booking\Interfaces\BookingHostRepositoryInterface;
 
+// ← جديد: Handover (استلام/تسليم السيارة)
+use App\Repositories\Handover\HandoverGuestRepository;
+use App\Repositories\Handover\HandoverHostRepository;
+use App\Repositories\Handover\Interfaces\HandoverGuestRepositoryInterface;
+use App\Repositories\Handover\Interfaces\HandoverHostRepositoryInterface;
+
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -114,6 +120,17 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             BookingHostRepositoryInterface::class,
             BookingHostRepository::class
+        );
+
+        // ── Handover (استلام/تسليم السيارة) ← جديد ─────────────────────────────
+        $this->app->bind(
+            HandoverHostRepositoryInterface::class,
+            HandoverHostRepository::class
+        );
+
+        $this->app->bind(
+            HandoverGuestRepositoryInterface::class,
+            HandoverGuestRepository::class
         );
 
         // ── Coupons ──────────────────────────────────────────────────────────

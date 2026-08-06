@@ -4,11 +4,13 @@
 namespace Database\Seeders;
 
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Review;
 use App\Models\Vehicle;
 use App\Models\Host;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class BookingAndReviewSeeder extends Seeder
 {
@@ -29,19 +31,34 @@ class BookingAndReviewSeeder extends Seeder
         $statuses = ['pending', 'confirmed', 'active', 'completed', 'cancelled'];
 
         foreach ($vehicles as $vehicle) {
-            // ─── 3 حجوزات لكل سيارة ──────────────────────────
-            foreach ($guests->random(min(3, $guests->count())) as $guest) {
 
-                $startDate      = now()->subDays(rand(10, 60))->toDateString();
-                $totalDays      = rand(1, 7);
-                $endDate        = now()->subDays(rand(1, 9))->toDateString();
+            $vehicleGuests = $guests->random(min(3, $guests->count()));
+
+            // ─── 3 حجوزات لكل سيارة ──────────────────────────
+            foreach ($vehicleGuests as $index => $guest) {
+
+                // ← جديد: أول حجز لكل سيارة مضمون إنو confirmed
+                // وبتواريخ حالية (مش بالماضي) حتى يصلح لتجربة
+                // ميزة الاستلام (handover) مباشرة. الباقي عشوائي
+                // متل ما كان.
+                $status = $index === 0 ? 'confirmed' : $statuses[array_rand($statuses)];
+
+                if ($status === 'confirmed') {
+                    $startDate = now()->toDateString();
+                    $totalDays = rand(2, 7);
+                    $endDate   = now()->addDays($totalDays)->toDateString();
+                } else {
+                    $startDate = now()->subDays(rand(10, 60))->toDateString();
+                    $totalDays = rand(1, 7);
+                    $endDate   = now()->subDays(rand(1, 9))->toDateString();
+                }
+
                 $basePricePerDay = (float) $vehicle->base_price_per_day;
                 $subtotal       = $basePricePerDay * $totalDays;
                 $deliveryFee    = rand(0, 1) ? rand(5, 20) : 0;
                 $platformFee    = round($subtotal * 0.10, 2);
-                $discountAmount = rand(0, 1) ? round($subtotal * 0.05, 2) : 0;
+                $discountAmount = $status !== 'confirmed' && rand(0, 1) ? round($subtotal * 0.05, 2) : 0;
                 $totalAmount    = $subtotal + $deliveryFee + $platformFee - $discountAmount;
-                $status         = $statuses[array_rand($statuses)];
                 $deliveryType   = rand(0, 1) ? 'pickup' : 'delivery';
 
                 $booking = Booking::create([
@@ -65,6 +82,21 @@ class BookingAndReviewSeeder extends Seeder
                     'cancellation_reason' => $status === 'cancelled' ? 'Changed my plans.' : null,
                     'cancelled_by'     => $status === 'cancelled' ? 'guest' : null,
                 ]);
+
+                // ─── Payment لكل حجز غير pending/cancelled ────
+                // (← جديد: بدون هاد، أي endpoint بيعمل eager load
+                // لعلاقة payment رح يرجع null لهاد الحجوزات وقت
+                // ما لازم يكون فيها دفعة فعلية، متل confirmed/active/completed)
+                if (in_array($status, ['confirmed', 'active', 'completed'])) {
+                    Payment::create([
+                        'booking_id'  => $booking->id,
+                        'payment_id'  => 'seed_' . Str::random(12),
+                        'amount'      => $totalAmount,
+                        'status'      => 'paid',
+                        'payment_url' => null,
+                        'paid_at'     => $booking->created_at,
+                    ]);
+                }
 
                 // ─── Review فقط للحجوزات المكتملة ────────────
                 if ($status === 'completed') {
@@ -96,6 +128,7 @@ class BookingAndReviewSeeder extends Seeder
         }
 
         $this->command->info('✅ Bookings and Reviews seeded successfully!');
+        $this->command->info('   كل سيارة صار إلها حجز confirmed واحد على الأقل، جاهز لتجربة الاستلام.');
     }
 
     // ─── تعليقات عشوائية ──────────────────────────────────────

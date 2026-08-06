@@ -43,5 +43,19 @@ class HostBookingController extends Controller
         }
     }
 
+    // ─── GET /api/host/bookings/current ← جديد ─────────────────
+    // يرجّع الحجز الحالي (اللي بحاجة استلام أو تسليم الآن) للمالك
+    public function currentBooking(): JsonResponse
+    {
+        $data = [];
+        try {
+            $hostId = auth()->user()->host->id;
+            $result = $this->_bookingHostService->currentBooking($hostId);
+            return $this->Success($result['data'], $result['message'], $result['code']);
+        } catch (Throwable $e) {
+            return $this->Error($data, $e->getMessage(), 500);
+        }
+    }
+
     
 }

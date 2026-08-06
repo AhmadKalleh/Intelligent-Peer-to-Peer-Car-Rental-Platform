@@ -3,6 +3,7 @@
 
 namespace App\Services\Booking;
 
+use App\Http\Resources\Booking\BookingHostResource;
 use App\Repositories\Booking\Interfaces\BookingHostRepositoryInterface;
 
 class BookingHostService
@@ -26,5 +27,26 @@ class BookingHostService
         ];
     }
 
-    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // CURRENT BOOKING ← جديد
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    public function currentBooking(int $hostId): array
+    {
+        $booking = $this->_bookingHostRepository->currentBooking($hostId);
+
+        if (!$booking) {
+            return [
+                'data'    => null,
+                'message' => 'No current booking right now.',
+                'code'    => 200,
+            ];
+        }
+
+        return [
+            'data'    => new BookingHostResource($booking),
+            'message' => 'Current booking retrieved successfully.',
+            'code'    => 200,
+        ];
+    }
+
 }

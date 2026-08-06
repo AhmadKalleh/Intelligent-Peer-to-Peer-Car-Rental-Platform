@@ -12,4 +12,7 @@ interface BookingGuestRepositoryInterface
     public function createBooking(array $data): Booking;
     public function cancelBooking(int $bookingId, int $userId, string $reason): array;
     public function index(int $userId, ?string $status, int $perPage): LengthAwarePaginator;
+
+    // ← جديد: الحجز الحالي الذي يحتاج استلام/تسليم الآن
+    public function currentBooking(int $userId): ?Booking;
 }

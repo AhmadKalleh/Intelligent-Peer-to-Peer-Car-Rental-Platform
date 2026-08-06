@@ -3,6 +3,7 @@
 
 namespace App\Services\Booking;
 
+use App\Http\Resources\Booking\BookingGuestResource;
 use App\Models\Coupon;
 use App\Models\Payment;
 use App\Models\VehicleAvailability;
@@ -222,6 +223,28 @@ class BookingGuestService
         return [
             'data'    => $result,
             'message' => 'Bookings retrieved successfully.',
+            'code'    => 200,
+        ];
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // CURRENT BOOKING ← جديد
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    public function currentBooking(): array
+    {
+        $booking = $this->_bookingGuestRepository->currentBooking(auth()->id());
+
+        if (!$booking) {
+            return [
+                'data'    => null,
+                'message' => 'No current booking right now.',
+                'code'    => 200,
+            ];
+        }
+
+        return [
+            'data'    => new BookingGuestResource($booking),
+            'message' => 'Current booking retrieved successfully.',
             'code'    => 200,
         ];
     }

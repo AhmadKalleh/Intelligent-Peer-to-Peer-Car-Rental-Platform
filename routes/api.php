@@ -4,6 +4,8 @@
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Booking\GuestBookingController;
 use App\Http\Controllers\Api\Booking\HostBookingController;
+use App\Http\Controllers\Api\Handover\HostHandoverController;   // ← جديد
+use App\Http\Controllers\Api\Handover\GuestHandoverController;  // ← جديد
 use App\Http\Controllers\Api\Coupon\GuestCouponController;
 use App\Http\Controllers\Api\Coupon\HostCouponController;
 use App\Http\Controllers\Api\Feature\FeatureController;
@@ -115,6 +117,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ─── Host Bookings ────────────────────────────────────────
         Route::get('bookings',      [HostBookingController::class, 'index']);
+        Route::get('bookings/current', [HostBookingController::class, 'currentBooking']); // ← جديد
+
+        // ─── Vehicle Handover (استلام/تسليم السيارة) ← جديد ───────
+        Route::prefix('bookings/handover')->group(function () {
+            Route::post('generate', [HostHandoverController::class, 'generate']);
+        });
 
     });
 
@@ -188,6 +196,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('list',                         [GuestBookingController::class, 'index']);
             Route::delete('cancel',                 [GuestBookingController::class, 'cancelBooking']);
             Route::get('payment-status',     [GuestBookingController::class, 'checkPayment']);
+            Route::get('current',            [GuestBookingController::class, 'currentBooking']); // ← جديد
+
+            // ─── Vehicle Handover (استلام/تسليم السيارة) ← جديد ───
+            Route::prefix('handover')->group(function () {
+                Route::post('confirm', [GuestHandoverController::class, 'confirm']);
+            });
         });
                 // ─── AI Chat (مساعد ذكي خاص بالضيف فقط) ────────────────────────────
         Route::prefix('ai-chat')->group(function () {
