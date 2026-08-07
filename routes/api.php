@@ -23,6 +23,8 @@ use App\Models\VehicleAvailability;
 use App\Http\Controllers\Api\AiChat\AiChatController;
 use App\Http\Controllers\Api\Favorite\FavoriteController;   // ← جديد
 use App\Http\Controllers\Api\Notification\NotificationController;
+use App\Http\Controllers\Api\Review\GuestReviewController;
+use App\Http\Controllers\Api\Review\HostReviewController;
 use App\Http\Controllers\Api\Search\AdminSearchController;
 use App\Http\Controllers\Api\Search\GuestSearchController;
 use App\Http\Controllers\Api\Search\HostSearchController;
@@ -123,7 +125,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('bookings/handover')->group(function () {
             Route::post('generate', [HostHandoverController::class, 'generate']);
         });
-
+        // ─── Reviews (تقييم الهوست) ← جديد ─────────────────────────
+        Route::get('reviews/rating', [HostReviewController::class, 'averageRating']);
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -210,6 +213,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('unread-count',  [AiChatController::class, 'unreadCount']);
             Route::post('read',         [AiChatController::class, 'markAsRead']);
         });
+
+        // ─── Reviews (تقييم الهوست بعد انتهاء الرحلة) ← جديد ────────
+        Route::post('reviews', [GuestReviewController::class, 'submit']);
 
     });
 

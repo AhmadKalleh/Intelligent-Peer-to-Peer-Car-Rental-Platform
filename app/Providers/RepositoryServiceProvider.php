@@ -61,6 +61,10 @@ use App\Repositories\Handover\HandoverHostRepository;
 use App\Repositories\Handover\Interfaces\HandoverGuestRepositoryInterface;
 use App\Repositories\Handover\Interfaces\HandoverHostRepositoryInterface;
 
+use App\Repositories\Review\ReviewGuestRepository;
+use App\Repositories\Review\ReviewHostRepository;
+use App\Repositories\Review\Interfaces\ReviewGuestRepositoryInterface;
+use App\Repositories\Review\Interfaces\ReviewHostRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -142,6 +146,16 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             CouponGuestRepositoryInterface::class,
             CouponGuestRepository::class
+        );
+          // ── Reviews (تقييم الغيست للهوست) ← جديد ───────────────────────────────
+        $this->app->bind(
+            ReviewGuestRepositoryInterface::class,
+            ReviewGuestRepository::class
+        );
+
+        $this->app->bind(
+            ReviewHostRepositoryInterface::class,
+            ReviewHostRepository::class
         );
 
         // ── Favorite ─────────────────────────────────────────────────────────
