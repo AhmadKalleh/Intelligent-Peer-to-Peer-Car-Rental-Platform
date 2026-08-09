@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('plate_number',30)->unique();
             $table->enum('listing_status', ['listed', 'snoozed', 'unlisted'])->default('unlisted');
             $table->enum('admin_review_status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestampTz('snoozed_until')->nullable();
             $table->text('admin_rejection_reason')->nullable();
             $table->timestampTz('reviewed_at')->nullable();
             $table->decimal('base_price_per_day',10,2);
