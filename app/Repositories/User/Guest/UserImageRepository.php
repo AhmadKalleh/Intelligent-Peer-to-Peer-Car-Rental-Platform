@@ -30,16 +30,21 @@ class UserImageRepository implements UserImageRepositoryInterface
             }
 
             // Upload new image
+
             $uploadResult = $this->uploadImage($file, 'users/avatars');
 
             $path = $uploadResult['path'];
             $hash = $uploadResult['hash'];
 
+            $uploaded = $this->uploadImage($file, 'users/avatars');
+
+
             // Save to images table via morph
             $image = Image::create([
                 'imageable_type' => User::class,
                 'imageable_id'   => $user->id,
-                'path'           => $path,
+                'path'           => $uploaded['path'],
+                'hash'           => $uploaded['hash'],
                 'type'           => 'profile_image',
                 'is_primary'     => true,
                 'sort_order'     => 0,
@@ -49,9 +54,13 @@ class UserImageRepository implements UserImageRepositoryInterface
             return [
                 'status' => 'updated',
                 'image'  => $image,
-                'url'    => url(Storage::url($path)),
+                'url'    => url(Storage::url($uploaded['path'])),
             ];
         });
     }
+
+}
+
+
 }
 

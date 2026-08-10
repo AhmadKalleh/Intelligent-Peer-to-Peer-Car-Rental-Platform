@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            ClearStorageSeeder::class,
+            // ClearStorageSeeder::class,
             RolesPermissionsSeeder::class,
             FeatureSeeder::class,
             VehicleSeeder::class,

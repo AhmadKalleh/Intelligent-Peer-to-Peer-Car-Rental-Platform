@@ -124,6 +124,22 @@ class UserAdminRepository implements UserAdminRepositoryInterface
                 ];
             }
 
+            // ← جديد: منع الحذف لو عنده أي سجل حجوزات قديم (completed/cancelled)
+            // bookings.user_id معمول cascade عند حذف اليوزر، لكن
+            // payments.booking_id معمول restrict، فبتنكسر عملية الحذف
+            // بخطأ SQL خام بدل ما ترجع رسالة واضحة. نحافظ على السجلات
+            // المالية القديمة ونمنع الحذف النهائي، ونقترح الحظر بدلاً منه.
+            $hasBookingHistory = Booking::query()
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if ($hasBookingHistory) {
+                return [
+                    'status'  => 'has_booking_history',
+                    'warning' => 'This guest has previous booking/payment history and cannot be permanently deleted. Please ban the account instead.',
+                ];
+            }
+
             // Delete profile image from storage
             if ($user->image) {
                 Storage::disk('public')->delete($user->image->path);
@@ -164,6 +180,19 @@ class UserAdminRepository implements UserAdminRepositoryInterface
                         'status'        => 'has_vehicles',
                         'vehicle_count' => $vehicleCount,
                         'warning'       => "This host has {$vehicleCount} vehicle(s) registered on the platform. Remove all vehicles before deleting the host.",
+                    ];
+                }
+
+                // ← جديد: نفس ثغرة deleteGuest بالضبط - bookings.host_id
+                // معمول cascade، لكن payments.booking_id معمول restrict.
+                $hasBookingHistory = Booking::query()
+                    ->where('host_id', $host->id)
+                    ->exists();
+
+                if ($hasBookingHistory) {
+                    return [
+                        'status'  => 'has_booking_history',
+                        'warning' => 'This host has previous booking/payment history and cannot be permanently deleted.',
                     ];
                 }
 

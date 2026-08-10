@@ -68,9 +68,10 @@ class UserAdminService
         $result = $this->_userAdminRepository->deleteGuest($userId);
 
         return match ($result['status']) {
-            'not_guest'           => ['data' => [],  'message' => 'User is not a guest.',                         'code' => 422],
-            'has_active_bookings' => ['data' => ['bookings_count' => $result['bookings_count']], 'message' => $result['warning'], 'code' => 409],
-            default               => ['data' => [],  'message' => 'Guest deleted successfully.',                   'code' => 200],
+            'not_guest'            => ['data' => [],  'message' => 'User is not a guest.',                         'code' => 422],
+            'has_active_bookings'  => ['data' => ['bookings_count' => $result['bookings_count']], 'message' => $result['warning'], 'code' => 409],
+            'has_booking_history'  => ['data' => [],  'message' => $result['warning'],                              'code' => 409], // ← جديد
+            default                => ['data' => [],  'message' => 'Guest deleted successfully.',                   'code' => 200],
         };
     }
 
@@ -81,9 +82,10 @@ class UserAdminService
         $result = $this->_userAdminRepository->deleteHost($userId);
 
         return match ($result['status']) {
-            'not_host'     => ['data' => [], 'message' => 'User is not a host.',                        'code' => 422],
-            'has_vehicles' => ['data' => ['vehicle_count' => $result['vehicle_count']], 'message' => $result['warning'], 'code' => 409],
-            default        => ['data' => [], 'message' => 'Host deleted successfully.',                 'code' => 200],
+            'not_host'            => ['data' => [], 'message' => 'User is not a host.',                        'code' => 422],
+            'has_vehicles'        => ['data' => ['vehicle_count' => $result['vehicle_count']], 'message' => $result['warning'], 'code' => 409],
+            'has_booking_history' => ['data' => [], 'message' => $result['warning'],                            'code' => 409], // ← جديد
+            default               => ['data' => [], 'message' => 'Host deleted successfully.',                 'code' => 200],
         };
     }
 
