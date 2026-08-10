@@ -30,7 +30,10 @@ class UserImageRepository implements UserImageRepositoryInterface
             }
 
             // Upload new image
-            $path = $this->uplodeImage($file, 'users/avatars');
+            $uploadResult = $this->uploadImage($file, 'users/avatars');
+
+            $path = $uploadResult['path'];
+            $hash = $uploadResult['hash'];
 
             // Save to images table via morph
             $image = Image::create([
@@ -40,6 +43,7 @@ class UserImageRepository implements UserImageRepositoryInterface
                 'type'           => 'profile_image',
                 'is_primary'     => true,
                 'sort_order'     => 0,
+                'hash'        => $hash, // إذا كان لديك عمود hash
             ]);
 
             return [
@@ -50,3 +54,4 @@ class UserImageRepository implements UserImageRepositoryInterface
         });
     }
 }
+

@@ -40,19 +40,7 @@ class HostDetailResource extends JsonResource
                     : null
             ),
 
-            // ─── Active Vehicles ─────────────────────────────────────────────
-            'vehicles' => $this->whenLoaded('vehicles', fn() =>
-                $this->vehicles->map(fn($vehicle) => [
-                    'id'            => $vehicle->id,
-                    'make'          => $vehicle->make,
-                    'model'         => $vehicle->model,
-                    'year'          => $vehicle->year,
-                    'listing_status'=> $vehicle->listing_status,
-                    'primary_image' => $vehicle->primaryImage
-                        ? url(Storage::url($vehicle->primaryImage->path))
-                        : null,
-                ])
-            ),
+            
         ];
     }
 }

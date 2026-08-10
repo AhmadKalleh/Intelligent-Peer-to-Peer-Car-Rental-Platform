@@ -16,10 +16,14 @@ class GuestDetailResource extends JsonResource
             'full_name'  => $this->full_name,
             'email'      => $this->email,
             'status'     => $this->status,
+            'is_host'    => $this->whenLoaded('roles', fn() =>
+                $this->roles->contains('name', 'host')
+            ),
             'avatar'     => $this->image
                 ? url(Storage::url($this->image->path))
                 : url(Storage::url('users/profile-user.png')),
             'created_at' => $this->created_at?->toDateString(),
+
         ];
     }
 }
