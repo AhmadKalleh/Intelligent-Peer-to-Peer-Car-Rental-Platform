@@ -65,6 +65,8 @@ use App\Repositories\Review\ReviewGuestRepository;
 use App\Repositories\Review\ReviewHostRepository;
 use App\Repositories\Review\Interfaces\ReviewGuestRepositoryInterface;
 use App\Repositories\Review\Interfaces\ReviewHostRepositoryInterface;
+use App\Repositories\Statistics\Admin\AdminStatisticsRepository;
+use App\Repositories\Statistics\Admin\Interfaces\AdminStatisticsRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -184,6 +186,11 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             VehicleQueryRepositoryInterface::class,
             VehicelQueryRepository::class
+        );
+
+        $this->app->bind(
+            AdminStatisticsRepositoryInterface::class,
+            AdminStatisticsRepository::class
         );
     }
 

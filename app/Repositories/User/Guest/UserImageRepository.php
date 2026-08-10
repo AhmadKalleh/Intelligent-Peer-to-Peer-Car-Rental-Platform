@@ -62,5 +62,5 @@ class UserImageRepository implements UserImageRepositoryInterface
 }
 
 
-}
+
 
