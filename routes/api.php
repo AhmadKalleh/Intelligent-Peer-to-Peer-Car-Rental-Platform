@@ -73,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Host
     Route::prefix('host')->group(function () {
 
+        // ── Host Profile ──────────────────────────────────────────────────
+        Route::post('profile/image', [HostUserController::class, 'updateProfileImage']);
+        Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails']);
+        Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword']);
+
         // ─── Vehicles ────────────────────────────────────
 
         Route::get('vehicles',              [HostVehicleController::class, 'getHostVehicles']);

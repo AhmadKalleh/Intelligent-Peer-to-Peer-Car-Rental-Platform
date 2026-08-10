@@ -33,7 +33,7 @@ class FormRequestUserHost extends FormRequest
         ];
     }
 
-    private function changeGuestPassword(): array
+    private function changeHostPassword(): array
     {
         return [
             'user_id'      => ['required', 'integer', 'exists:users,id'],

@@ -16,9 +16,6 @@ class UserHostRepository implements UserHostRepositoryInterface
         return Host::query()
             ->with([
                 'user.image',
-                'vehicles' => fn($q) => $q
-                    ->with(['primaryImage'])
-                    ->where('listing_status', 'listed'),
                 'drivingLicense',
             ])
             ->findOrFail($hostId);

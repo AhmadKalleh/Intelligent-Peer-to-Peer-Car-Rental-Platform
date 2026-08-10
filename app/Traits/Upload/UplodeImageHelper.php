@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Traits\Upload;
-use Illuminate\Support\Str;
 
 trait UplodeImageHelper
 {

@@ -13,7 +13,11 @@ class UserGuestRepository implements UserGuestRepositoryInterface
     public function showGuestDetails(int $userId): User
     {
         return User::query()
-            ->with(['image'])
+            ->with([
+                'image',
+                'roles',
+                'host', // ✅ نجلب بيانات الهوست إن وجد
+            ])
             ->findOrFail($userId);
     }
 
