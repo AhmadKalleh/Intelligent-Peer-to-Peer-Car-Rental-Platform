@@ -51,7 +51,7 @@ class FavoriteRepository implements FavoriteRepositoryInterface
                         'vehicles.total_bookings',
                         'vehicles.listing_status',
                         'vehicles.admin_review_status',
-                        'vehicles.snoozed_until',
+                        
                     ])
                     ->with('primaryImage')
                     ->withCurrentPrice();

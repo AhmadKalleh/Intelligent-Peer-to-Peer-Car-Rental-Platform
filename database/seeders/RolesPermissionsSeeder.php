@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Guest;
-use App\Models\Host;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -13,319 +11,261 @@ use Spatie\Permission\Models\Role;
 class RolesPermissionsSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
      * Roles:
-     *   - admin   → الإداري       : يشرف على المنصة بالكامل
-     *   - host    → المضيف        : يملك السيارات ويؤجرها
-     *   - guest   → المستأجر      : يبحث ويحجز السيارات
+     *  - admin: full platform administration
+     *  - host : vehicle owner / renter
+     *  - guest: vehicle renter
+     *
+     * Permissions below are aligned with the CURRENT api.php routes.
      */
     public function run(): void
     {
-        // ────────────────────────────────────────────────
-        // 1. إنشاء الأدوار
-        // ────────────────────────────────────────────────
-        $admin_role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-        $host_role  = Role::create(['name' => 'host',  'guard_name' => 'web']);
-        $guest_role = Role::create(['name' => 'guest', 'guard_name' => 'web']);
+        // ============================================================
+        // 1. Roles
+        // ============================================================
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $hostRole  = Role::firstOrCreate(['name' => 'host',  'guard_name' => 'web']);
+        $guestRole = Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
 
+        // ============================================================
+        // 2. Permissions
+        // ============================================================
 
-        // ────────────────────────────────────────────────
-        // 2. تعريف الصلاحيات لكل وحدة
-        // ────────────────────────────────────────────────
-
-        // ── 2.1 إدارة الحساب الشخصي (مشتركة بين الأدوار) ──
-        $profile_permissions = [
-            'profile.show',             // عرض الملف الشخصي
-            'profile.update',           // تعديل الاسم والصورة
+        // Shared by authenticated admin / host / guest.
+        $sharedPermissions = [
+            'features.index',
+            'vehicles.show',
+            'notifications.index',
+            'notifications.unread-count',
+            'notifications.mark-all-read',
         ];
 
-        // ── 2.2 إدارة السيارات (Host) ──
-        $vehicle_permissions = [
-            'vehicles.create',                  // إضافة سيارة جديدة
-            'vehicles.update',                  // تعديل بيانات السيارة
-            'vehicles.delete',                  // حذف السيارة نهائياً
-            'vehicles.show',                    // عرض تفاصيل سيارة
-            'vehicles.index',                   // عرض قائمة سياراته
-            'vehicles.update-listing-status',   // تغيير حالة العرض (listed/snoozed/unlisted)
-            'vehicles.update-location',         // تحديث موقع الاستلام
-            'vehicles.update-instructions',     // تعديل تعليمات المستأجر
-            'vehicles.update-delivery',         // إعداد خيار التوصيل والرسوم
+        // Global feature management: administrative only.
+        $featureManagementPermissions = [
+            'features.create',
+            'features.update',
+            'features.delete',
         ];
 
-        // ── 2.3 إدارة ميزات السيارة (Host) ──
-        $vehicle_features_permissions = [
-            'vehicle-features.create',  // إضافة ميزة
-            'vehicle-features.update',  // تعديل ميزة
-            'vehicle-features.delete',  // حذف ميزة
-            'vehicle-features.index',   // عرض ميزات السيارة
+        $hostProfilePermissions = [
+            'profile.show',
+            'profile.image',
+            'profile.change-password',
         ];
 
-        // ── 2.4 تسعير مخصص (Host) ──
-        $custom_pricing_permissions = [
-            'vehicle-pricing.create',   // إضافة سعر ليوم محدد
-            'vehicle-pricing.update',   // تعديل السعر
-            'vehicle-pricing.delete',   // حذف السعر المخصص
-            'vehicle-pricing.index',    // عرض الأسعار المخصصة
+        $hostVehiclePermissions = [
+            'vehicles.index-own',
+            'vehicles.create',
+            'vehicles.show-own',
+            'vehicles.update',
+            'vehicles.update-listing-status',
+            'vehicles.update-location',
+            'vehicle-availability.snooze',
+            'vehicle-pricing.update',
+            'vehicle-pricing.create',
+            'vehicle-pricing.delete',
+            'vehicles.images.upload',
+            'vehicles.images.delete',
+            'vehicles.images.set-primary',
+            'vehicles.features.sync',
+            'vehicle-availability.update',
         ];
 
-        // ── 2.5 إدارة التوفر (Host) ──
-        $availability_permissions = [
-            'vehicle-availability.create',  // إضافة فترة توفر أو حجب
-            'vehicle-availability.update',  // تعديل الفترة
-            'vehicle-availability.delete',  // حذف الفترة
-            'vehicle-availability.index',   // عرض جدول التوفر
+        $hostSearchPermissions = [
+            'search.host',
         ];
 
-        // ── 2.6 الحجوزات ──
-        $booking_permissions_host = [
-            'bookings.index-own',       // Host: عرض حجوزاته
-            'bookings.show',            // Host: تفاصيل حجز معين
-            'bookings.confirm',         // Host: قبول طلب الحجز
-            'bookings.reject',          // Host: رفض طلب الحجز
-            'bookings.start',           // Host: تفعيل الحجز (بدء الرحلة)
-            'bookings.complete',        // Host: إنهاء الحجز
+        $hostCouponPermissions = [
+            'coupons.index-own',
+            'coupons.create',
+            'coupons.update',
+            'coupons.toggle',
+            'coupons.delete',
+            'coupons.uses',
         ];
 
-        $booking_permissions_guest = [
-            'bookings.create',          // Guest: إنشاء حجز جديد
-            'bookings.cancel',          // Guest: إلغاء الحجز
-            'bookings.index-own',       // Guest: عرض حجوزاته
-            'bookings.show',            // Guest: تفاصيل حجز معين
+        $hostBookingPermissions = [
+            'bookings.index-own',
+            'bookings.current-own',
+            'handover.generate',
+            'reviews.rating-own',
         ];
 
-        // ── 2.7 التقييمات ──
-        $review_permissions = [
-            'reviews.create',           // إنشاء تقييم بعد اكتمال الحجز
-            'reviews.show',             // عرض تقييم معين
-            'reviews.index-vehicle',    // عرض تقييمات سيارة
+        $guestProfilePermissions = [
+            'profile.show',
+            'profile.image',
+            'profile.change-password',
         ];
 
-        // ── 2.8 المحادثات والرسائل ──
-        $conversation_permissions_shared = [
-            'conversations.index',      // عرض قائمة المحادثات
-            'conversations.show',       // فتح محادثة
-            'messages.send',            // إرسال رسالة (نص أو صورة)
-            'messages.index',           // عرض رسائل محادثة
-            'messages.mark-read',       // تعليم الرسائل كمقروءة
+        $guestVehiclePermissions = [
+            'vehicles.browse',
+            'vehicles.search',
+            'vehicles.filter',
+            'vehicles.location.reset',
         ];
 
-        $conversation_support = [
-            'conversations.open-support', // فتح محادثة دعم مع الأدمن
+        $favoritePermissions = [
+            'favorites.index',
+            'favorites.create-list',
+            'favorites.show-list',
+            'favorites.rename-list',
+            'favorites.delete-list',
+            'favorites.toggle',
+            'favorites.move',
+            'favorites.heart-status',
         ];
 
-        // ── 2.9 الإشعارات ──
-        $notification_permissions = [
-            'notifications.index',      // عرض إشعاراته
-            'notifications.mark-read',  // تعليم إشعار كمقروء
-            'notifications.mark-all-read', // تعليم الكل كمقروء
+        $guestComplaintPermissions = [
+            'complaints.create-own',
+            'complaints.reasons',
         ];
 
-        // ── 2.10 الكوبونات (Host) ──
-        $coupon_permissions = [
-            'coupons.create',           // إنشاء كوبون خصم
-            'coupons.update',           // تعديل الكوبون
-            'coupons.delete',           // حذف الكوبون
-            'coupons.index',            // عرض كوبوناته
-            'coupons.show',             // تفاصيل كوبون
+        $conversationPermissions = [
+            'conversations.open',
+            'conversations.index',
+            'conversations.show',
+            'messages.index',
+            'messages.send',
+            'messages.mark-read',
+            'messages.unread-count',
         ];
 
-        // ── 2.11 استخدام الكوبون (Guest) ──
-        $coupon_use_permissions = [
-            'coupons.apply',            // تطبيق كوبون عند الحجز
+        $guestCouponPermissions = [
+            'coupons.apply',
         ];
 
-        // ── 2.12 المدفوعات ──
-        $payment_permissions_guest = [
-            'payments.create',          // دفع حجز
-            'payments.index-own',       // عرض سجل مدفوعاته
-            'payments.show',            // تفاصيل عملية دفع
+        $guestBookingPermissions = [
+            'bookings.calculate',
+            'bookings.create',
+            'bookings.index-own',
+            'bookings.cancel',
+            'bookings.current-own',
+            'payments.status-own',
+            'handover.confirm',
         ];
 
-        $payout_permissions_host = [
-            'host-payouts.index',       // عرض سجل الأرباح
-            'host-payouts.show',        // تفاصيل صرفية
-            'host-payouts.request',     // طلب سحب الرصيد
+        $aiChatPermissions = [
+            'ai-chat.send',
+            'ai-chat.messages',
+            'ai-chat.unread-count',
+            'ai-chat.mark-read',
         ];
 
-        // ── 2.13 الاكتشاف والبحث (Guest) ──
-        $discovery_permissions = [
-            'vehicles.browse',          // تصفح السيارات المتاحة
-            'vehicles.search',          // البحث بالفلاتر
-            'vehicles.show-public',     // عرض صفحة سيارة للعموم
-            'recent-searches.index',    // عرض بحثه الأخير
-            'recent-searches.clear',    // مسح سجل البحث
+        $guestReviewPermissions = [
+            'reviews.create',
         ];
 
-        // ── 2.14 المفضلة (Guest) ──
-        $favorites_permissions = [
-            'favorites.create',         // إضافة سيارة للمفضلة
-            'favorites.delete',         // إزالة من المفضلة
-            'favorites.index',          // عرض المفضلة
+        $adminPermissions = [
+            'admin.vehicles.index-pending',
+            'admin.vehicles.show-pending',
+            'admin.vehicles.approve',
+            'admin.vehicles.reject',
+            'admin.users.index',
+            'admin.users.create',
+            'admin.users.promote-to-host',
+            'admin.users.toggle-status',
+            'admin.users.delete-guest',
+            'admin.users.delete-host',
+            'admin.users.update-profile-image',
+            'admin.complaints.index',
+            'admin.complaints.reply',
+            'admin.complaints.unanswered-count',
+            'admin.search.users',
+            'admin.stats.view',
         ];
 
-        // ── 2.15 الصور ──
-        $image_permissions_shared = [
-            'images.upload',            // رفع صورة (للملف الشخصي أو السيارة)
-            'images.delete-own',        // حذف صورة خاصة به
+        // ============================================================
+        // 3. Create every permission exactly once
+        // ============================================================
+        $permissionGroups = [
+            $sharedPermissions,
+            $featureManagementPermissions,
+            $hostProfilePermissions,
+            $hostVehiclePermissions,
+            $hostSearchPermissions,
+            $hostCouponPermissions,
+            $hostBookingPermissions,
+            $guestProfilePermissions,
+            $guestVehiclePermissions,
+            $favoritePermissions,
+            $guestComplaintPermissions,
+            $conversationPermissions,
+            $guestCouponPermissions,
+            $guestBookingPermissions,
+            $aiChatPermissions,
+            $guestReviewPermissions,
+            $adminPermissions,
         ];
 
-        // ── 2.16 التتبع الجغرافي (Host أثناء التوصيل) ──
-        $location_permissions = [
-            'location.broadcast',       // Host: بث الموقع اللحظي
-            'location.view',            // Guest: مشاهدة موقع التوصيل
-        ];
+        $allPermissions = collect($permissionGroups)
+            ->flatten()
+            ->unique()
+            ->values()
+            ->all();
 
-        // ── 2.17 صلاحيات الأدمن الحصرية ──
-        $admin_permissions = [
-            // إدارة المستخدمين
-            'admin.users.index',            // عرض جميع المستخدمين
-            'admin.users.show',             // تفاصيل مستخدم
-            'admin.users.suspend',          // تعليق حساب
-            'admin.users.activate',         // تفعيل حساب
-
-            // اعتماد المستأجرين
-            'admin.guests.approve-license', // قبول رخصة قيادة
-            'admin.guests.reject-license',  // رفض رخصة مع سبب
-
-            // اعتماد السيارات
-            'admin.vehicles.index-pending', // عرض السيارات المعلقة
-            'admin.vehicles.approve',       // اعتماد سيارة
-            'admin.vehicles.reject',        // رفض سيارة مع سبب
-            'admin.vehicles.force-unlist',  // إخفاء سيارة قسراً
-
-            // إدارة الحجوزات
-            'admin.bookings.index',         // عرض جميع الحجوزات
-            'admin.bookings.show',          // تفاصيل حجز
-
-            // الدعم الفني
-            'admin.conversations.index',    // عرض محادثات الدعم
-            'admin.conversations.reply',    // الرد على المستخدم
-
-            // التقارير والإحصاء
-            'admin.stats.view',             // لوحة إحصائيات المنصة
-
-            // إدارة المدفوعات
-            'admin.payments.index',         // عرض جميع المدفوعات
-            'admin.payouts.process',        // معالجة صرف أرباح المضيف
-        ];
-
-
-        // ────────────────────────────────────────────────
-        // 3. تسجيل جميع الصلاحيات في قاعدة البيانات
-        // ────────────────────────────────────────────────
-        $all_permissions = array_merge(
-            $profile_permissions,
-            $vehicle_permissions,
-            $vehicle_features_permissions,
-            $custom_pricing_permissions,
-            $availability_permissions,
-            $booking_permissions_host,
-            $booking_permissions_guest,
-            $review_permissions,
-            $conversation_permissions_shared,
-            $conversation_support,
-            $notification_permissions,
-            $coupon_permissions,
-            $coupon_use_permissions,
-            $payment_permissions_guest,
-            $payout_permissions_host,
-            $discovery_permissions,
-            $favorites_permissions,
-            $image_permissions_shared,
-            $location_permissions,
-            $admin_permissions,
-        );
-
-        // إزالة التكرار ثم الإنشاء
-        foreach (array_unique($all_permissions) as $permission) {
-            Permission::findOrCreate($permission, 'web');
+        foreach ($allPermissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
         }
 
+        // ============================================================
+        // 4. Role assignments
+        // ============================================================
 
-        // ────────────────────────────────────────────────
-        // 4. تعيين الصلاحيات للأدوار
-        // ────────────────────────────────────────────────
+        // Admin: all current API permissions.
+        $adminRole->syncPermissions($allPermissions);
 
-        // ── Admin: كل الصلاحيات ──────────────────────────
-        $admin_role->syncPermissions(array_unique($all_permissions));
+        // Host: only host/shared capabilities.
+        $hostRole->syncPermissions(array_values(array_unique(array_merge(
+            $sharedPermissions,
+            $hostProfilePermissions,
+            $hostVehiclePermissions,
+            $hostSearchPermissions,
+            $hostCouponPermissions,
+            $hostBookingPermissions,
+        ))));
 
+        // Guest: only guest/shared capabilities.
+        $guestRole->syncPermissions(array_values(array_unique(array_merge(
+            $sharedPermissions,
+            $guestProfilePermissions,
+            $guestVehiclePermissions,
+            $favoritePermissions,
+            $guestComplaintPermissions,
+            $conversationPermissions,
+            $guestCouponPermissions,
+            $guestBookingPermissions,
+            $aiChatPermissions,
+            $guestReviewPermissions,
+        ))));
 
-        // ── Host ─────────────────────────────────────────
-        $host_role->syncPermissions(array_unique(array_merge(
-            $profile_permissions,
-            $vehicle_permissions,
-            $vehicle_features_permissions,
-            $custom_pricing_permissions,
-            $availability_permissions,
-            $booking_permissions_host,
-            $review_permissions,
-            $conversation_permissions_shared,
-            $conversation_support,
-            $notification_permissions,
-            $coupon_permissions,
-            $payout_permissions_host,
-            $image_permissions_shared,
-            $location_permissions,    // location.broadcast
-        )));
-
-
-        // ── Guest ─────────────────────────────────────────
-        $guest_role->syncPermissions(array_unique(array_merge(
-            $profile_permissions,
-            $booking_permissions_guest,
-            $review_permissions,
-            $conversation_permissions_shared,
-            $conversation_support,
-            $notification_permissions,
-            $coupon_use_permissions,
-            $payment_permissions_guest,
-            $discovery_permissions,
-            $favorites_permissions,
-            $image_permissions_shared,
+        // ============================================================
+        // 5. Seed users (idempotent)
+        // ============================================================
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@carrental.sy'],
             [
-                'location.view',        // مشاهدة موقع التوصيل فقط
-            ],
-        )));
-
-
-
-        // ────────────────────────────────────────────────
-        // 5. إنشاء المستخدمين الأوليين (Seed Data)
-        // ────────────────────────────────────────────────
-
-        // ══ 5.1 Admin ════════════════════════════════════
-        $admin_user = User::query()->create([
-            'full_name'         => 'Admin User',
-            'email'             => 'admin@carrental.sy',
-            'password'     => Hash::make('password'),
-            'status'            => 'active',
-            'auth_provider'      => 'local',
-            'email_verified_at' => now(),
-        ]);
-
-        $admin_user->assignRole($admin_role);
-        $admin_user->givePermissionTo(
-            $admin_role->permissions()->pluck('name')->toArray()
+                'full_name' => 'Admin User',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
         );
+        $adminUser->assignRole($adminRole);
 
-
-        // ══ 5.2 Host ════════════════════════════════════
-
-        // ══ 5.3 Guest ════════════════════════════════════
-        $guest_user = User::query()->create([
-            'full_name'         => 'Guest User',
-            'email'             => 'guest@carrental.sy',
-            'password'     => Hash::make('password'),
-            'status'            => 'active',
-            'auth_provider'      => 'local',
-            'email_verified_at' => now(),
-        ]);
-
-        $guest_user->assignRole($guest_role);
-        $guest_user->givePermissionTo(
-            $guest_role->permissions()->pluck('name')->toArray()
+        $guestUser = User::firstOrCreate(
+            ['email' => 'guest@carrental.sy'],
+            [
+                'full_name' => 'Guest User',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
         );
-
+        $guestUser->assignRole($guestRole);
     }
 }
