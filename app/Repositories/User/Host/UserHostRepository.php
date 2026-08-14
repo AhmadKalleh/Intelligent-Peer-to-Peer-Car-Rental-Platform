@@ -16,6 +16,9 @@ class UserHostRepository implements UserHostRepositoryInterface
         return Host::query()
             ->with([
                 'user.image',
+                'vehicles' => fn($q) => $q
+                    ->with(['primaryImage'])
+                    ->where('listing_status', 'listed'),
                 'drivingLicense',
             ])
             ->findOrFail($hostId);
@@ -42,5 +45,14 @@ class UserHostRepository implements UserHostRepositoryInterface
             'status' => 'password_changed',
             'user'   => $user->fresh(),
         ];
+    }
+
+    // ─── Get Host ID ← جديد ────────────────────────────────────────────────────
+    // بيرجع hosts.id اعتمادًا على users.id (user_id عمود على جدول hosts)
+    public function getHostId(int $userId): ?int
+    {
+        return Host::query()
+            ->where('user_id', $userId)
+            ->value('id');
     }
 }

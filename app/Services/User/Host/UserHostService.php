@@ -39,4 +39,24 @@ class UserHostService
             'code'    => 200,
         ];
     }
+
+    // ─── Get Host ID ← جديد ────────────────────────────────────────────────────
+    public function getHostId(int $userId): array
+    {
+        $hostId = $this->_userHostRepository->getHostId($userId);
+
+        if (!$hostId) {
+            return [
+                'data'    => [],
+                'message' => 'You do not have a host account.',
+                'code'    => 422,
+            ];
+        }
+
+        return [
+            'data'    => ['host_id' => $hostId],
+            'message' => 'Host ID retrieved successfully.',
+            'code'    => 200,
+        ];
+    }
 }
