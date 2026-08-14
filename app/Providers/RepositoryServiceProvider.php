@@ -69,6 +69,9 @@ use App\Repositories\Statistics\Admin\AdminStatisticsRepository;
 use App\Repositories\Statistics\Admin\Interfaces\AdminStatisticsRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
+use App\Repositories\Account\AccountSwitchRepository;
+use App\Repositories\Account\Interfaces\AccountSwitchRepositoryInterface;
+
 class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -191,6 +194,23 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             AdminStatisticsRepositoryInterface::class,
             AdminStatisticsRepository::class
+        );
+
+         // ── Account (سويتش الحساب) ← جديد ───────────────────────────────────────
+        $this->app->bind(
+            AccountSwitchRepositoryInterface::class,
+            AccountSwitchRepository::class
+        );
+
+        // ── Coupons ──────────────────────────────────────────────────────────
+        $this->app->bind(
+            CouponHostRepositoryInterface::class,
+            CouponHostRepository::class
+        );
+
+        $this->app->bind(
+            CouponGuestRepositoryInterface::class,
+            CouponGuestRepository::class
         );
     }
 

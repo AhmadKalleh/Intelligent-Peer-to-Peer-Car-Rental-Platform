@@ -70,4 +70,16 @@ class HostUserController extends Controller
             return $this->Error($data, $e->getMessage(), 500);
         }
     }
+
+    // ─── Get Host ID (للمستخدم المسجّل دخوله حاليًا) ← جديد ───────────────────
+    public function getHostId(): JsonResponse
+    {
+        $data = [];
+        try {
+            $result = $this->_userHostService->getHostId(auth()->id());
+            return $this->Success($result['data'], $result['message'], $result['code']);
+        } catch (Throwable $e) {
+            return $this->Error($data, $e->getMessage(), 500);
+        }
+    }
 }

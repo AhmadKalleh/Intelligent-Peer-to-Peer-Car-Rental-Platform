@@ -143,7 +143,8 @@ class AuthService
                 'code'    => 403,
             ],
             'success' => [
-                'data'    => [
+                'data'    => [   
+                    "id" => $result['user']->id,
                     'full_name' => $result['user']->full_name,
                     'email' => $result['user']->email,
                     'token' => $result['token'],

@@ -26,6 +26,7 @@ class User extends Authenticatable
         'verification_code',
         'verification_code_expires_at',
         'verification_attempts',
+        'active_role', // ← جديد: الحساب الفعّال حاليًا (guest / host)
     ];
 
     protected $hidden = [

@@ -76,7 +76,10 @@ class UserAdminRepository implements UserAdminRepositoryInterface
                 ]
             );
 
-            // Swap role: remove guest → assign host
+            // ← معدّل: بالسابق كان يشيل دور guest نهائيًا (removeRole).
+            // هلق منحتفظ فيه ومنضيف host كمان، حتى يصير عند
+            // المستخدم الحسابين مع بعض ويقدر يستخدم ميزة السويتش
+            // (switch-role) للتنقل بينهم.
             $guestRole = Role::query()->where('name', 'guest')->first();
             $hostRole  = Role::query()->where('name', 'host')->first();
 
@@ -84,11 +87,20 @@ class UserAdminRepository implements UserAdminRepositoryInterface
                 throw new \Exception('Host role not found.');
             }
 
-            $user->removeRole($guestRole);
-            $user->assignRole($hostRole);
-            $user->syncPermissions($hostRole->permissions->pluck('name')->toArray());
+            if (!$user->hasRole('host')) {
+                $user->assignRole($hostRole);
+            }
 
-            
+            // دمج صلاحيات الدورين الاثنين بدل استبدالهم
+            $mergedPermissions = collect($guestRole?->permissions->pluck('name') ?? [])
+                ->merge($hostRole->permissions->pluck('name'))
+                ->unique()
+                ->toArray();
+
+            $user->syncPermissions($mergedPermissions);
+
+            // بما إنو صار عندو حساب host جديد، منفعّلو مباشرة كحساب حالي
+            $user->update(['active_role' => 'host']);
 
             return [
                 'status' => 'promoted',

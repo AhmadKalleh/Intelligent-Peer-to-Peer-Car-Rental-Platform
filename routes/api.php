@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Account\AccountSwitchController;
 use App\Http\Controllers\Api\Statistics\Admin\AdminStatisticsController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Booking\GuestBookingController;
@@ -67,6 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('vehicles/show', [VehicleController::class, 'show'])->middleware('can:vehicles.show');
 
+    // ─── Account Switch (سويتش بين حساب guest و host) ← جديد ───
+    Route::post('switch-role', [AccountSwitchController::class, 'switch']);
+    Route::post('vehicles/store',             [HostVehicleController::class, 'store']);
+    Route::get('guests/show', [GuestUserController::class, 'showGuestDetails']);
+
+
 
     // Host
     Route::prefix('host')->group(function () {
@@ -74,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // ── Host Profile ──────────────────────────────────────────────────
         Route::post('profile/image', [HostUserController::class, 'updateProfileImage'])->middleware('can:profile.image');
         Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails'])->middleware('can:profile.show');
+         Route::get ('hosts/id',              [HostUserController::class, 'getHostId'])->middleware('can:profile.show'); // ← جديد      
         Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword'])->middleware('can:profile.change-password');
 
         // ─── Vehicles ────────────────────────────────────
@@ -83,6 +91,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('vehicles/show',         [HostVehicleController::class, 'showForHost'])->middleware('can:vehicles.show-own');
         Route::post('vehicles/basic-info', [HostVehicleController::class, 'updateBasicInfo'])->middleware('can:vehicles.update');
 
+            Route::prefix('chat')->group(function () {
+            Route::post('open',     [ConversationController::class, 'open'])->middleware('can:conversations.open');
+            Route::get ('list',     [ConversationController::class, 'list'])->middleware('can:conversations.index');
+            Route::get ('show',     [ConversationController::class, 'show'])->middleware('can:conversations.show');
+            Route::get ('messages', [ConversationController::class, 'messages'])->middleware('can:messages.index');
+            Route::post('send',     [ConversationController::class, 'send'])->middleware('can:messages.send');
+            Route::post('read',     [ConversationController::class, 'markAsRead'])->middleware('can:messages.mark-read');
+            Route::get ('unread',   [ConversationController::class, 'unreadCount'])->middleware('can:messages.unread-count');
+        });
+         // ──  Complaints ────────────────────────────────────────────────
+        Route::post('complaints',         [GuestComplaintController::class, 'submitComplaint'])->middleware('can:complaints.create-own');
+        Route::get ('complaints/reasons', [GuestComplaintController::class, 'getComplaintReasons'])->middleware('can:complaints.reasons');
             // ─── Status ──────────────────────────────────────
         Route::post('vehicles/listing-status',[HostVehicleController::class, 'updateListingStatus'])->middleware('can:vehicles.update-listing-status');
         Route::post('vehicles/snooze',                   [HostVehicleController::class, 'storeSnooze'])->middleware('can:vehicle-availability.snooze');
@@ -142,6 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get   ('vehicles/airports', [VehicleController::class, 'airports'])->middleware('can:vehicles.browse');
         Route::get   ('vehicles/nearby',   [VehicleController::class, 'nearby'])->middleware('can:vehicles.browse');
         Route::delete('vehicles/location', [VehicleController::class, 'resetLocation'])->middleware('can:vehicles.location.reset');
+        Route::post('vehicles',             [HostVehicleController::class, 'store'])->middleware('can:vehicles.create');
 
 
 
