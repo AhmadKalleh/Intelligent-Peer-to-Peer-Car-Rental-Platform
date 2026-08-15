@@ -78,8 +78,6 @@ class VehicleAdminService
             type           : 'vehicle_rejected',
             title          : 'Vehicle Rejected',
             body           : $message,
-            notifiableType : \App\Models\Vehicle::class,
-            notifiableId   : $data['vehicle_id'],
         );
 
         // ✅ Broadcast في Service

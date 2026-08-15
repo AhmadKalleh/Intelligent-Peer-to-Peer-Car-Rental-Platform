@@ -86,7 +86,8 @@ class RolesPermissionsSeeder extends Seeder
 
         $hostBookingPermissions = [
             'bookings.index-own',
-            'bookings.current-own',
+            'bookings.active-own',
+            'bookings.confirmed-own',
             'handover.generate',
             'reviews.rating-own',
         ];
@@ -139,7 +140,8 @@ class RolesPermissionsSeeder extends Seeder
             'bookings.create',
             'bookings.index-own',
             'bookings.cancel',
-            'bookings.current-own',
+            'bookings.active-own',
+            'bookings.confirmed-own',
             'payments.status-own',
             'handover.confirm',
         ];

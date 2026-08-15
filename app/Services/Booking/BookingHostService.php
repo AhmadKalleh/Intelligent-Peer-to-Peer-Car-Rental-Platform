@@ -30,21 +30,24 @@ class BookingHostService
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // CURRENT BOOKING ← جديد
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function currentBooking(int $hostId): array
+    public function getActiveBookings(int $hostId): array
     {
-        $booking = $this->_bookingHostRepository->currentBooking($hostId);
-
-        if (!$booking) {
-            return [
-                'data'    => null,
-                'message' => 'No current booking right now.',
-                'code'    => 200,
-            ];
-        }
+        $bookings = $this->_bookingHostRepository->getActiveBookings($hostId);
 
         return [
-            'data'    => new BookingHostResource($booking),
+            'data'    => BookingHostResource::collection($bookings),
             'message' => 'Current booking retrieved successfully.',
+            'code'    => 200,
+        ];
+    }
+
+    public function getConfirmedBookings(int $hostId): array
+    {
+        $bookings = $this->_bookingHostRepository->getConfirmedBookings($hostId);
+
+        return [
+            'data'    => BookingHostResource::collection($bookings),
+            'message' => 'Confirmed bookings retrieved successfully.',
             'code'    => 200,
         ];
     }

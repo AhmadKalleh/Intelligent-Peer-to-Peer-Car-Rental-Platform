@@ -81,7 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // ── Host Profile ──────────────────────────────────────────────────
         Route::post('profile/image', [HostUserController::class, 'updateProfileImage'])->middleware('can:profile.image');
         Route::get ('hosts/show',            [HostUserController::class, 'showHostDetails'])->middleware('can:profile.show');
-         Route::get ('hosts/id',              [HostUserController::class, 'getHostId'])->middleware('can:profile.show'); // ← جديد      
+         Route::get ('hosts/id',              [HostUserController::class, 'getHostId'])->middleware('can:profile.show'); // ← جديد
         Route::post('hosts/change-password', [HostUserController::class, 'changeHostPassword'])->middleware('can:profile.change-password');
 
         // ─── Vehicles ────────────────────────────────────
@@ -142,8 +142,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ─── Host Bookings ────────────────────────────────────────
         Route::get('bookings',      [HostBookingController::class, 'index'])->middleware('can:bookings.index-own');
-        Route::get('bookings/current', [HostBookingController::class, 'currentBooking'])->middleware('can:bookings.current-own'); // ← جديد
-
+        Route::get('bookings/current', [HostBookingController::class, 'getActiveBookings'])->middleware('can:bookings.active-own'); // ← جديد
+        Route::get('bookings/confirmed', [HostBookingController::class, 'getConfirmedBookings'])->middleware('can:bookings.confirmed-own'); // ← جديد
         // ─── Vehicle Handover (استلام/تسليم السيارة) ← جديد ───────
         Route::prefix('bookings/handover')->group(function () {
             Route::post('generate', [HostHandoverController::class, 'generate'])->middleware('can:handover.generate');
@@ -223,8 +223,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('list',                         [GuestBookingController::class, 'index'])->middleware('can:bookings.index-own');
             Route::delete('cancel',                 [GuestBookingController::class, 'cancelBooking'])->middleware('can:bookings.cancel');
             Route::get('payment-status',     [GuestBookingController::class, 'checkPayment'])->middleware('can:payments.status-own');
-            Route::get('current',            [GuestBookingController::class, 'currentBooking'])->middleware('can:bookings.current-own'); // ← جديد
-
+            Route::get('current',            [GuestBookingController::class, 'getActiveBooking'])->middleware('can:bookings.active-own'); // ← جديد
+            Route::get('confirmed',          [GuestBookingController::class, 'getConfirmedBooking'])->middleware('can:bookings.confirmed-own'); // ← جديد
             // ─── Vehicle Handover (استلام/تسليم السيارة) ← جديد ───
             Route::prefix('handover')->group(function () {
                 Route::post('confirm', [GuestHandoverController::class, 'confirm'])->middleware('can:handover.confirm');

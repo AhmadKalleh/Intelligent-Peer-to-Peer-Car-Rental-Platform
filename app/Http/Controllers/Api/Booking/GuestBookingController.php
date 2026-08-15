@@ -57,11 +57,11 @@ class GuestBookingController extends Controller
     }
 
     // ─── DELETE /api/bookings/{id} ────────────────────────────
-    public function cancelBooking(FormRequestGuestBooking $request, int $id): JsonResponse
+    public function cancelBooking(FormRequestGuestBooking $request): JsonResponse
     {
         $data = [];
         try {
-            $result = $this->_bookingGuestService->cancelBooking($id, $request->validated()['reason']);
+            $result = $this->_bookingGuestService->cancelBooking($request->validated()['booking_id']);
             return $this->Success(
                 $result['data'] ? new BookingGuestResource($result['data']) : [],
                 $result['message'],
@@ -72,7 +72,7 @@ class GuestBookingController extends Controller
         }
     }
 
-    
+
     // ─── GET /api/bookings ────────────────────────────────────
     public function index(FormRequestGuestBooking $request): JsonResponse
     {
@@ -97,11 +97,22 @@ class GuestBookingController extends Controller
 
     // ─── GET /api/Guest/bookings/current ← جديد ────────────────
     // يرجّع الحجز الحالي (اللي بحاجة استلام أو تسليم الآن) للمستأجر
-    public function currentBooking(): JsonResponse
+    public function getActiveBooking(): JsonResponse
     {
         $data = [];
         try {
-            $result = $this->_bookingGuestService->currentBooking();
+            $result = $this->_bookingGuestService->getActiveBooking();
+            return $this->Success($result['data'], $result['message'], $result['code']);
+        } catch (Throwable $e) {
+            return $this->Error($data, $e->getMessage(), 500);
+        }
+    }
+
+    public function getConfirmedBooking(): JsonResponse
+    {
+        $data = [];
+        try {
+            $result = $this->_bookingGuestService->getConfirmedBooking();
             return $this->Success($result['data'], $result['message'], $result['code']);
         } catch (Throwable $e) {
             return $this->Error($data, $e->getMessage(), 500);

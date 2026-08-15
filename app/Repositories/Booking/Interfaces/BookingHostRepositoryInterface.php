@@ -3,7 +3,7 @@
 
 namespace App\Repositories\Booking\Interfaces;
 
-use App\Models\Booking;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface BookingHostRepositoryInterface
@@ -11,5 +11,6 @@ interface BookingHostRepositoryInterface
     public function index(int $hostId, ?string $status, int $perPage): LengthAwarePaginator;
 
     // ← جديد: الحجز الحالي الذي يحتاج استلام/تسليم الآن
-    public function currentBooking(int $hostId): ?Booking;
+    public function getActiveBookings(int $hostId): ?Collection;
+    public function getConfirmedBookings(int $hostId): ?Collection;
 }

@@ -20,8 +20,8 @@ class AdminStatisticsService
         return [
             'data' => [
                 'overview'         => $this->getOverview(),
-                'monthly_bookings' => $this->getMonthlyBookings(),
-                'monthly_revenue'  => $this->getMonthlyRevenue(),
+                'bookings' => $this->getBookingsStatistics(),
+                'revenue'  => $this->getRevenueStatistics(),
                 'top_performers'   => $this->getTopPerformers(),
             ],
             'message' => 'Statistics retrieved successfully.',
@@ -53,38 +53,42 @@ class AdminStatisticsService
         return $data;
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MONTHLY BOOKINGS (كاش ساعة)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    private function getMonthlyBookings(): array
+    private function getBookingsStatistics(): array
     {
-        $cacheKey = 'admin:stats:monthly_bookings';
+        $cacheKey = 'admin:stats:bookings';
         $cached   = Redis::get($cacheKey);
 
         if ($cached) {
             return json_decode($cached, true);
         }
 
-        $data = $this->_statisticsRepository->getMonthlyBookings();
-        Redis::setex($cacheKey, 3600, json_encode($data));
+        $data = $this->_statisticsRepository->getBookingsStatistics();
+
+        Redis::setex(
+            $cacheKey,
+            3600,
+            json_encode($data)
+        );
 
         return $data;
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MONTHLY REVENUE (كاش ساعة)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    private function getMonthlyRevenue(): array
+    private function getRevenueStatistics(): array
     {
-        $cacheKey = 'admin:stats:monthly_revenue';
+        $cacheKey = 'admin:stats:revenue';
         $cached   = Redis::get($cacheKey);
 
         if ($cached) {
             return json_decode($cached, true);
         }
 
-        $data = $this->_statisticsRepository->getMonthlyRevenue();
-        Redis::setex($cacheKey, 3600, json_encode($data));
+        $data = $this->_statisticsRepository->getRevenueStatistics();
+
+        Redis::setex(
+            $cacheKey,
+            3600,
+            json_encode($data)
+        );
 
         return $data;
     }
