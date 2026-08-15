@@ -4,6 +4,8 @@
 use App\Models\Conversation;
 use App\Models\Host;
 use App\Models\User;
+use App\Models\Booking;
+
 use Illuminate\Support\Facades\Broadcast;
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -60,4 +62,23 @@ Broadcast::channel('ai-chat.{userId}', function (User $user, int $userId) {
 // routes/channels.php
 Broadcast::channel('user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Booking Tracking Private Channel  ← جديد
+//
+// private-booking-tracking.{bookingId}
+//
+// يُصرَّح للمستخدم فقط إذا كان طرفاً بهاد الحجز تحديدًا
+// (المالك عبر host.user_id أو المستأجر عبر user_id)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Broadcast::channel('booking-tracking.{bookingId}', function (User $user, int $bookingId) {
+    $booking = Booking::with('host')->find($bookingId);
+
+    if (! $booking) {
+        return false;
+    }
+
+    return (int) $user->id === (int) $booking->user_id
+        || (int) $user->id === (int) ($booking->host->user_id ?? 0);
 });

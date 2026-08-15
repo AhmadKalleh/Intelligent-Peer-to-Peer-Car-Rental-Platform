@@ -1,7 +1,5 @@
 <?php
 
-// database/seeders/BookingAndReviewSeeder.php
-
 namespace Database\Seeders;
 
 use App\Models\Booking;
@@ -72,7 +70,21 @@ class BookingAndReviewSeeder extends Seeder
         }
 
         // =========================================================
-        // 3. إنشاء الحجوزات العادية
+        // 3. إنشاء الـ Guest المخصص للـ Confirmed Bookings
+        // =========================================================
+
+        $confirmedGuest = $this->getConfirmedGuest();
+
+        $this->command->info(
+            "Confirmed Guest ID: {$confirmedGuest->id}"
+        );
+
+        $this->command->info(
+            "Confirmed Guest Email: {$confirmedGuest->email}"
+        );
+
+        // =========================================================
+        // 4. إنشاء الحجوزات العادية
         //
         // لكل سيارة:
         // COMPLETED
@@ -120,7 +132,7 @@ class BookingAndReviewSeeder extends Seeder
 
             $this->createConfirmedBooking(
                 vehicle: $vehicle,
-                guest: $vehicleGuests[2],
+                guest: $confirmedGuest,
             );
 
             // =====================================================
@@ -134,10 +146,23 @@ class BookingAndReviewSeeder extends Seeder
         }
 
         // =========================================================
-        // 4. إنشاء حجز Active مخصص لأحمد
+        // 5. إنشاء حجز Confirmed + Delivery مخصص لأحمد
+        //
+        // مهم:
+        // هذا الحجز سيكون ملكاً للمستخدم ID = 3
+        // وليس guest@test.com
+        //
+        // Status:
+        // confirmed
+        //
+        // Delivery:
+        // delivery
+        //
+        // Payment:
+        // paid
         // =========================================================
 
-        $this->createAhmedActiveBooking();
+        $this->createAhmedConfirmedDeliveryBooking();
 
         // =========================================================
         // SUCCESS
@@ -152,51 +177,87 @@ class BookingAndReviewSeeder extends Seeder
         );
 
         $this->command->info(
-            '✅ Every vehicle has:'
-        );
-
-        $this->command->info(
-            '   ✓ completed booking'
-        );
-
-        $this->command->info(
-            '   ✓ cancelled booking'
-        );
-
-        $this->command->info(
-            '   ✓ confirmed booking'
-        );
-
-        $this->command->info(
-            '   ✓ active booking'
-        );
-
-        $this->command->info(
             '=============================================='
         );
     }
 
     // =============================================================
-    // ACTIVE BOOKING FOR AHMED
+    // CONFIRMED BOOKING GUEST
     // =============================================================
 
-    private function createAhmedActiveBooking(): void
+    private function getConfirmedGuest(): User
+    {
+        $guest = User::firstOrCreate(
+            [
+                'email' => 'guest@carrental.sy',
+            ],
+            [
+                'full_name'         => 'Car Rental Guest',
+                'password'          => Hash::make('password'),
+                'auth_provider'     => 'local',
+                'status'            => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        if (!$guest->hasRole('guest')) {
+            $guest->assignRole('guest');
+        }
+
+        return $guest;
+    }
+
+    // =============================================================
+    // CONFIRMED + DELIVERY BOOKING FOR AHMED
+    //
+    // هذا هو الحجز المخصص للمستخدم:
+    //
+    // User:
+    // ID = 3
+    // Email = ahmad@host.com
+    //
+    // Status:
+    // confirmed
+    //
+    // Delivery:
+    // delivery
+    //
+    // Payment:
+    // paid
+    // =============================================================
+
+    private function createAhmedConfirmedDeliveryBooking(): void
     {
         // =========================================================
         // 1. جلب أحمد
         // =========================================================
 
-        $ahmad = User::where(
-            'email',
-            'ahmad@host.com'
-        )->first();
+        $ahmad = User::find(3);
 
         if (!$ahmad) {
             $this->command->error(
-                'Ahmed user not found: ahmad@host.com'
+                'Ahmed user with ID 3 was not found.'
             );
 
             return;
+        }
+
+        if ($ahmad->email !== 'ahmad@host.com') {
+            $this->command->warn(
+                "User ID 3 email is {$ahmad->email}, not ahmad@host.com."
+            );
+        }
+
+        // =========================================================
+        // التأكد أن أحمد Guest
+        // =========================================================
+
+        if (!$ahmad->hasRole('guest')) {
+            $ahmad->assignRole('guest');
+
+            $this->command->info(
+                'Guest role assigned to Ahmed.'
+            );
         }
 
         // =========================================================
@@ -210,35 +271,19 @@ class BookingAndReviewSeeder extends Seeder
 
         if (!$host) {
             $this->command->error(
-                "Host record for Ahmed was not found."
+                'Host record for Ahmed was not found.'
             );
 
             return;
         }
 
         // =========================================================
-        // 3. إنشاء / جلب Guest مخصص للاختبار
-        // =========================================================
-
-        $guest = User::firstOrCreate(
-            [
-                'email' => 'guest@test.com',
-            ],
-            [
-                'full_name'         => 'Test Guest',
-                'password'          => Hash::make('password'),
-                'auth_provider'     => 'local',
-                'status'            => 'active',
-                'email_verified_at' => now(),
-            ]
-        );
-
-        if (!$guest->hasRole('guest')) {
-            $guest->assignRole('guest');
-        }
-
-        // =========================================================
-        // 4. جلب سيارة تابعة لأحمد
+        // 3. جلب سيارة لأحمد تدعم التوصيل
+        //
+        // نأخذ فقط:
+        // listed
+        // approved
+        // delivery_available = true
         // =========================================================
 
         $vehicle = Vehicle::where(
@@ -253,7 +298,36 @@ class BookingAndReviewSeeder extends Seeder
                 'admin_review_status',
                 'approved'
             )
+            ->where(
+                'delivery_available',
+                true
+            )
             ->first();
+
+        // =========================================================
+        // إذا لم توجد سيارة تدعم التوصيل
+        // نبحث عن أي سيارة لأحمد
+        // =========================================================
+
+        if (!$vehicle) {
+            $this->command->warn(
+                'No delivery-enabled vehicle found for Ahmed.'
+            );
+
+            $vehicle = Vehicle::where(
+                'host_id',
+                $host->id
+            )
+                ->where(
+                    'listing_status',
+                    'listed'
+                )
+                ->where(
+                    'admin_review_status',
+                    'approved'
+                )
+                ->first();
+        }
 
         if (!$vehicle) {
             $this->command->error(
@@ -264,73 +338,146 @@ class BookingAndReviewSeeder extends Seeder
         }
 
         // =========================================================
-        // 5. التأكد أن السيارة لا تحتوي Active Booking حالياً
+        // 4. تاريخ الحجز
+        //
+        // يبدأ اليوم
+        // وينتهي بعد 5 أيام
         // =========================================================
 
-        $today = now()->toDateString();
+        $startDate = now()->startOfDay();
 
-        $existingActiveBooking = Booking::where(
+        $endDate = now()
+            ->startOfDay()
+            ->addDays(5);
+
+        // =========================================================
+        // 5. التأكد من عدم وجود حجز متداخل
+        //
+        // نبحث عن:
+        // confirmed
+        // active
+        //
+        // لنفس السيارة ونفس الفترة
+        // =========================================================
+
+        $existingBooking = Booking::where(
             'vehicle_id',
             $vehicle->id
         )
-            ->where(
+            ->whereIn(
                 'status',
-                'active'
+                [
+                    'confirmed',
+                    'active',
+                ]
             )
             ->whereDate(
                 'start_date',
                 '<=',
-                $today
+                $endDate->toDateString()
             )
             ->whereDate(
                 'end_date',
                 '>=',
-                $today
+                $startDate->toDateString()
             )
             ->first();
 
-        if ($existingActiveBooking) {
+        // =========================================================
+        // إذا السيارة محجوزة
+        //
+        // نحاول إيجاد سيارة ثانية لأحمد
+        // =========================================================
+
+        if ($existingBooking) {
 
             $this->command->warn(
-                "Vehicle #{$vehicle->id} already has an active booking."
+                "Vehicle #{$vehicle->id} already has a confirmed/active booking."
             );
 
-            $this->command->info(
-                "Existing Booking ID: {$existingActiveBooking->id}"
-            );
+            $availableVehicle = Vehicle::where(
+                'host_id',
+                $host->id
+            )
+                ->where(
+                    'listing_status',
+                    'listed'
+                )
+                ->where(
+                    'admin_review_status',
+                    'approved'
+                )
+                ->when(
+                    $vehicle->delivery_available,
+                    function ($query) {
+                        $query->where(
+                            'delivery_available',
+                            true
+                        );
+                    }
+                )
+                ->whereDoesntHave(
+                    'bookings',
+                    function ($query) use (
+                        $startDate,
+                        $endDate
+                    ) {
+                        $query
+                            ->whereIn(
+                                'status',
+                                [
+                                    'confirmed',
+                                    'active',
+                                ]
+                            )
+                            ->whereDate(
+                                'start_date',
+                                '<=',
+                                $endDate->toDateString()
+                            )
+                            ->whereDate(
+                                'end_date',
+                                '>=',
+                                $startDate->toDateString()
+                            );
+                    }
+                )
+                ->first();
 
-            return;
+            if ($availableVehicle) {
+                $vehicle = $availableVehicle;
+
+                $this->command->info(
+                    "Using available Vehicle #{$vehicle->id} instead."
+                );
+            } else {
+                $this->command->error(
+                    'No available vehicle found for Ahmed for the requested dates.'
+                );
+
+                return;
+            }
         }
 
         // =========================================================
-        // 6. تاريخ الحجز
+        // 6. إنشاء الحجز
         //
-        // بدأ قبل يومين
-        // ينتهي بعد 5 أيام
+        // مهم جداً:
         //
-        // لذلك هو Active فعلياً الآن.
+        // user_id = Ahmed ID 3
+        //
+        // وليس guest@test.com
         // =========================================================
 
-        $startDate = now()->subDays(2);
-
-        $endDate = now()->addDays(5);
-
-        // =========================================================
-        // 7. إنشاء الحجز
-        // =========================================================
-
-        $booking = $this->createBookingWithRelations(
+        $booking = $this->createAhmedDeliveryBooking(
             vehicle: $vehicle,
-            guest: $guest,
-            status: 'active',
+            guest: $ahmad,
             startDate: $startDate,
             endDate: $endDate,
-            createPayment: true,
-            createReview: false,
         );
 
         // =========================================================
-        // 8. عرض المعلومات في Terminal
+        // 7. عرض المعلومات
         // =========================================================
 
         $this->command->info(
@@ -338,11 +485,23 @@ class BookingAndReviewSeeder extends Seeder
         );
 
         $this->command->info(
-            '✅ ACTIVE BOOKING CREATED FOR AHMED'
+            '🚗 AHMED CONFIRMED DELIVERY BOOKING'
         );
 
         $this->command->info(
-            "Ahmed User ID: {$ahmad->id}"
+            '=============================================='
+        );
+
+        $this->command->info(
+            "User ID: {$ahmad->id}"
+        );
+
+        $this->command->info(
+            "User Email: {$ahmad->email}"
+        );
+
+        $this->command->info(
+            "User Role: guest"
         );
 
         $this->command->info(
@@ -355,14 +514,6 @@ class BookingAndReviewSeeder extends Seeder
 
         $this->command->info(
             "Vehicle: {$vehicle->make} {$vehicle->model}"
-        );
-
-        $this->command->info(
-            "Guest ID: {$guest->id}"
-        );
-
-        $this->command->info(
-            "Guest Email: {$guest->email}"
         );
 
         $this->command->info(
@@ -382,6 +533,26 @@ class BookingAndReviewSeeder extends Seeder
         );
 
         $this->command->info(
+            "Delivery Type: {$booking->delivery_type}"
+        );
+
+        $this->command->info(
+            "Delivery Address: {$booking->delivery_address}"
+        );
+
+        $this->command->info(
+            "Delivery Lat: {$booking->delivery_lat}"
+        );
+
+        $this->command->info(
+            "Delivery Lng: {$booking->delivery_lng}"
+        );
+
+        $this->command->info(
+            "Payment: paid"
+        );
+
+        $this->command->info(
             "Total Days: {$booking->total_days}"
         );
 
@@ -392,6 +563,192 @@ class BookingAndReviewSeeder extends Seeder
         $this->command->info(
             '=============================================='
         );
+    }
+
+    // =============================================================
+    // CREATE AHMED DELIVERY BOOKING
+    // =============================================================
+
+    private function createAhmedDeliveryBooking(
+        Vehicle $vehicle,
+        User $guest,
+        $startDate,
+        $endDate,
+    ): Booking {
+
+        // =========================================================
+        // TOTAL DAYS
+        // =========================================================
+
+        $totalDays = max(
+            1,
+            $startDate->diffInDays($endDate)
+        );
+
+        // =========================================================
+        // PRICE
+        // =========================================================
+
+        $basePricePerDay =
+            (float) $vehicle->base_price_per_day;
+
+        $subtotal =
+            round(
+                $basePricePerDay * $totalDays,
+                2
+            );
+
+        // =========================================================
+        // DELIVERY
+        //
+        // إجبارياً delivery
+        // =========================================================
+
+        $deliveryType = 'delivery';
+
+        $deliveryFee = 10;
+
+        // =========================================================
+        // DELIVERY LOCATION
+        // =========================================================
+
+        $deliveryAddress =
+            'Street 5, Damascus, Syria';
+
+        $deliveryLat = 33.5138;
+
+        $deliveryLng = 36.2765;
+
+        // =========================================================
+        // PLATFORM FEE
+        // =========================================================
+
+        $platformFee =
+            round(
+                $subtotal * 0.10,
+                2
+            );
+
+        // =========================================================
+        // DISCOUNT
+        // =========================================================
+
+        $discountAmount = 0;
+
+        // =========================================================
+        // TOTAL
+        // =========================================================
+
+        $totalAmount =
+            round(
+                $subtotal
+                + $deliveryFee
+                + $platformFee
+                - $discountAmount,
+                2
+            );
+
+        // =========================================================
+        // CREATE BOOKING
+        //
+        // أهم سطر:
+        //
+        // user_id = $guest->id
+        //
+        // وهنا $guest هو أحمد ID 3
+        // =========================================================
+
+        $booking = Booking::create([
+            'vehicle_id' =>
+                $vehicle->id,
+
+            'host_id' =>
+                $vehicle->host_id,
+
+            'user_id' =>
+                $guest->id,
+
+            'start_date' =>
+                $startDate->toDateString(),
+
+            'end_date' =>
+                $endDate->toDateString(),
+
+            'total_days' =>
+                $totalDays,
+
+            'base_price_per_day' =>
+                $basePricePerDay,
+
+            'subtotal' =>
+                $subtotal,
+
+            'discount_amount' =>
+                $discountAmount,
+
+            'delivery_fee' =>
+                $deliveryFee,
+
+            'platform_fee' =>
+                $platformFee,
+
+            'total_amount' =>
+                $totalAmount,
+
+            // مهم جداً
+            'delivery_type' =>
+                $deliveryType,
+
+            // مهم جداً
+            'delivery_address' =>
+                $deliveryAddress,
+
+            // Tracking / Map
+            'delivery_lat' =>
+                $deliveryLat,
+
+            'delivery_lng' =>
+                $deliveryLng,
+
+            // مهم جداً
+            'status' =>
+                'confirmed',
+
+            'cancellation_reason' =>
+                null,
+
+            'cancelled_by' =>
+                null,
+        ]);
+
+        // =========================================================
+        // PAYMENT
+        //
+        // الحجز confirmed
+        // والدفع paid
+        // =========================================================
+
+        Payment::create([
+            'booking_id' =>
+                $booking->id,
+
+            'payment_id' =>
+                'seed_' . Str::random(12),
+
+            'amount' =>
+                $totalAmount,
+
+            'status' =>
+                'paid',
+
+            'payment_url' =>
+                null,
+
+            'paid_at' =>
+                $booking->created_at,
+        ]);
+
+        return $booking;
     }
 
     // =============================================================
@@ -561,12 +918,6 @@ class BookingAndReviewSeeder extends Seeder
                 ? 'delivery'
                 : 'pickup';
 
-        /*
-        |--------------------------------------------------------------------------
-        | إذا السيارة لا تدعم التوصيل
-        |--------------------------------------------------------------------------
-        */
-
         if (!$vehicle->delivery_available) {
             $deliveryType = 'pickup';
         }
@@ -602,7 +953,6 @@ class BookingAndReviewSeeder extends Seeder
                 true
             )
         ) {
-
             $discountAmount =
                 rand(0, 1) === 1
                     ? round(
@@ -826,7 +1176,6 @@ class BookingAndReviewSeeder extends Seeder
             'is_visible' =>
                 true,
 
-            // Vehicle
             'cleanliness_rating' =>
                 $subRatings[
                     'cleanliness_rating'
@@ -842,7 +1191,6 @@ class BookingAndReviewSeeder extends Seeder
                     'comfort_rating'
                 ],
 
-            // Host
             'communication_rating' =>
                 $subRatings[
                     'communication_rating'
