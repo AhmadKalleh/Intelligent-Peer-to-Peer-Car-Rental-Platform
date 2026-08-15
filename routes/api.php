@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\Complaint\GuestComplaintController;
 use App\Http\Controllers\Api\Conversation\ConversationController;
 use App\Http\Controllers\Api\AiChat\AiChatController;
 use App\Http\Controllers\Api\Favorite\FavoriteController;   // ← جديد
+use App\Http\Controllers\Api\LocationTracking\GuestLocationTrackingController;
+use App\Http\Controllers\Api\LocationTracking\HostLocationTrackingController;
 use App\Http\Controllers\Api\Notification\NotificationController;
 use App\Http\Controllers\Api\Review\GuestReviewController;
 use App\Http\Controllers\Api\Review\HostReviewController;
@@ -73,7 +75,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('vehicles/store',             [HostVehicleController::class, 'store']);
     Route::get('guests/show', [GuestUserController::class, 'showGuestDetails']);
 
-
+// ─── Live Location Tracking (تتبع توصيل السيارة) ← جديد ────
+            Route::post('track-location', [GuestLocationTrackingController::class, 'update'])
+                ->middleware(['can:tracking.update', 'throttle:40,1']);
+            Route::get('track-location', [GuestLocationTrackingController::class, 'show'])
+                ->middleware('can:tracking.show');
 
     // Host
     Route::prefix('host')->group(function () {
@@ -150,6 +156,13 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         // ─── Reviews (تقييم الهوست) ← جديد ─────────────────────────
         Route::get('reviews/rating', [HostReviewController::class, 'averageRating'])->middleware('can:reviews.rating-own');
+
+        
+        // ─── Live Location Tracking (تتبع توصيل السيارة) ← جديد ────
+        Route::prefix('bookings')->group(function () {
+            Route::post('track-location', [HostLocationTrackingController::class, 'update']);
+            Route::get('track-location', [HostLocationTrackingController::class, 'show']);
+        });
     });
 
     // ─── Guest ────────────────────────────────────────────────────────────
@@ -240,6 +253,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ─── Reviews (تقييم الهوست بعد انتهاء الرحلة) ← جديد ────────
         Route::post('reviews', [GuestReviewController::class, 'submit'])->middleware('can:reviews.create');
+         Route::prefix('bookings')->group(function () {
+            Route::post('track-location', [HostLocationTrackingController::class, 'update']); // بحد أقصى ~ تحديث كل 1.5 ثانية
+            Route::get('track-location', [HostLocationTrackingController::class, 'show']);
+        });
 
     });
 

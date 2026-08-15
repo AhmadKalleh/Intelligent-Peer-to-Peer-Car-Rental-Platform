@@ -70,6 +70,7 @@ class VehicleGuestShowResource extends JsonResource
             // الفقرة الثانية: Hosted By
             // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             'hosted_by' => $this->whenLoaded('host', fn() => [
+                'host_id' => $this->host_id,
                 'name'            => $this->host->user->full_name ?? null,
                 'is_all_star_host'=> (bool) ($this->is_all_star_host ?? false),
                 'rating_avg'      => (float) ($this->host->rating_avg ?? 0.0),

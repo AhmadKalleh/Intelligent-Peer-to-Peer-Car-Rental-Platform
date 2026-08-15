@@ -69,6 +69,13 @@ use App\Repositories\Statistics\Admin\AdminStatisticsRepository;
 use App\Repositories\Statistics\Admin\Interfaces\AdminStatisticsRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
+
+// ← جديد: LocationTracking (تتبع موقع التوصيل اللحظي)
+use App\Repositories\LocationTracking\LocationTrackingHostRepository;
+use App\Repositories\LocationTracking\LocationTrackingGuestRepository;
+use App\Repositories\LocationTracking\Interfaces\LocationTrackingHostRepositoryInterface;
+use App\Repositories\LocationTracking\Interfaces\LocationTrackingGuestRepositoryInterface;
+
 use App\Repositories\Account\AccountSwitchRepository;
 use App\Repositories\Account\Interfaces\AccountSwitchRepositoryInterface;
 
@@ -200,6 +207,17 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             AccountSwitchRepositoryInterface::class,
             AccountSwitchRepository::class
+        );
+
+         // ── LocationTracking (تتبع موقع التوصيل اللحظي) ← جديد ──────────────────
+        $this->app->bind(
+            LocationTrackingHostRepositoryInterface::class,
+            LocationTrackingHostRepository::class
+        );
+
+        $this->app->bind(
+            LocationTrackingGuestRepositoryInterface::class,
+            LocationTrackingGuestRepository::class
         );
 
         // ── Coupons ──────────────────────────────────────────────────────────
