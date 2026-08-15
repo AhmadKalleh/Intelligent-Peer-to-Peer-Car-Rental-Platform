@@ -4,6 +4,7 @@
 namespace App\Repositories\Booking;
 
 use App\Models\Booking;
+use Illuminate\Database\Eloquent\Collection;
 use App\Repositories\Booking\Interfaces\BookingHostRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -22,11 +23,9 @@ class BookingHostRepository implements BookingHostRepositoryInterface
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // CURRENT BOOKING ← جديد
+    // Active BOOKING ← جديد
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // يرجّع الحجز الأقرب حاليًا الذي يحتاج استلام (confirmed)
-    // أو تسليم (active)، أي "الحجز الحالي" الذي يظهر للمالك.
-    public function currentBooking(int $hostId): ?Booking
+    public function getActiveBookings(int $hostId): ?Collection
     {
         return Booking::with([
                 'vehicle',
@@ -35,9 +34,24 @@ class BookingHostRepository implements BookingHostRepositoryInterface
                 'handovers' => fn($q) => $q->where('status', 'pending')->latest(),
             ])
             ->where('host_id', $hostId)
-            ->whereIn('status', ['confirmed', 'active'])
+            ->where('status', 'active')
             ->where('end_date', '>=', now()->toDateString())
             ->orderBy('start_date')
-            ->first();
+            ->get();
+    }
+
+    public function getConfirmedBookings(int $hostId): ?Collection
+    {
+        return Booking::with([
+                'vehicle',
+                'user',
+                'payment',
+                'handovers' => fn($q) => $q->where('status', 'pending')->latest(),
+            ])
+            ->where('host_id', $hostId)
+            ->where('status', 'confirmed')
+            ->where('start_date', '>=', now()->toDateString())
+            ->orderBy('start_date')
+            ->get();
     }
 }

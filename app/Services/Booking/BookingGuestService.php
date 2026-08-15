@@ -4,6 +4,7 @@
 namespace App\Services\Booking;
 
 use App\Http\Resources\Booking\BookingGuestResource;
+use App\Jobs\BroadcastNewBookingConfirmedJob;
 use App\Models\Coupon;
 use App\Models\Payment;
 use App\Models\VehicleAvailability;
@@ -162,6 +163,16 @@ class BookingGuestService
 
             );
 
+            // ── Broadcast للهوست لحظياً ───────────────────────────
+            BroadcastNewBookingConfirmedJob::dispatch(
+                hostUserId  : $booking->host->user_id,
+                bookingId   : $booking->id,
+                vehicleName : "{$booking->vehicle->make} {$booking->vehicle->model}",
+                startDate   : $booking->start_date->toDateString(),
+                endDate     : $booking->end_date->toDateString(),
+                totalAmount : (float) $booking->total_amount,
+            );
+
             return ['status' => 'success', 'booking' => $booking->fresh()];
         });
     }
@@ -169,12 +180,12 @@ class BookingGuestService
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // CANCEL BOOKING
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function cancelBooking(int $bookingId, string $reason): array
+    public function cancelBooking(int $bookingId): array
     {
         $result = $this->_bookingGuestRepository->cancelBooking(
             $bookingId,
             auth()->id(),
-            $reason
+            'No reason provided'
         );
 
         if ($result['status'] === 'not_cancellable') {
@@ -203,7 +214,7 @@ class BookingGuestService
         );
 
         return [
-            'data'    => $booking,
+            'data'    => [],
             'message' => 'Booking cancelled successfully.',
             'code'    => 200,
         ];
@@ -230,9 +241,9 @@ class BookingGuestService
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // CURRENT BOOKING ← جديد
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function currentBooking(): array
+    public function getActiveBooking(): array
     {
-        $booking = $this->_bookingGuestRepository->currentBooking(auth()->id());
+        $booking = $this->_bookingGuestRepository->getActiveBooking(auth()->id());
 
         if (!$booking) {
             return [
@@ -245,6 +256,25 @@ class BookingGuestService
         return [
             'data'    => new BookingGuestResource($booking),
             'message' => 'Current booking retrieved successfully.',
+            'code'    => 200,
+        ];
+    }
+
+    public function getConfirmedBooking(): array
+    {
+        $booking = $this->_bookingGuestRepository->getConfirmedBooking(auth()->id());
+
+        if(!$booking) {
+            return [
+                'data'    => null,
+                'message' => 'No confirmed booking right now.',
+                'code'    => 200,
+            ];
+        }
+
+        return [
+            'data'    => new BookingGuestResource($booking),
+            'message' => 'Confirmed bookings retrieved successfully.',
             'code'    => 200,
         ];
     }

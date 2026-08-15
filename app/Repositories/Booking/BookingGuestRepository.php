@@ -116,7 +116,7 @@ class BookingGuestRepository implements BookingGuestRepositoryInterface
                 'status'             => 'pending',
             ]);
 
-            
+
             return $booking;
         });
     }
@@ -138,7 +138,7 @@ class BookingGuestRepository implements BookingGuestRepositoryInterface
 
             $booking->update([
                 'status'              => 'cancelled',
-                'cancellation_reason' => $reason,
+                'cancellation_reason' => $reason?? 'No reason provided',
                 'cancelled_by'        => 'guest',
             ]);
 
@@ -169,10 +169,10 @@ class BookingGuestRepository implements BookingGuestRepositoryInterface
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // CURRENT BOOKING 
+    // Active BOOKING
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   
-    public function currentBooking(int $userId): ?Booking
+
+    public function getActiveBooking(int $userId): ?Booking
     {
         return Booking::with([
                 'vehicle.primaryImage',
@@ -181,8 +181,23 @@ class BookingGuestRepository implements BookingGuestRepositoryInterface
                 'handovers' => fn($q) => $q->where('status', 'pending')->latest(),
             ])
             ->where('user_id', $userId)
-            ->whereIn('status', ['confirmed', 'active'])
+            ->where('status', 'active')
             ->where('end_date', '>=', now()->toDateString())
+            ->orderBy('start_date')
+            ->first();
+    }
+
+    public function getConfirmedBooking(int $userId): ?Booking
+    {
+        return Booking::with([
+                'vehicle.primaryImage',
+                'host.user',
+                'payment',
+                'handovers' => fn($q) => $q->where('status', 'pending')->latest(),
+            ])
+            ->where('user_id', $userId)
+            ->where('status', 'confirmed')
+            ->where('start_date', '>=', now()->toDateString())
             ->orderBy('start_date')
             ->first();
     }

@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             BookingAndReviewSeeder::class,
             CouponSeeder::class,
             //CouponUseSeeder::class,
-             StatisticsSeeder::class,
+            StatisticsSeeder::class,
         ]);
     }
 }

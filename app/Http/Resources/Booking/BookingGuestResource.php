@@ -70,6 +70,7 @@ class BookingGuestResource extends JsonResource
             'payment' => $this->whenLoaded('payment', fn() => [
                 'status'      => $this->payment->status,
                 'paid_at'     => $this->created_at?->format('M d, Y'),
+                'payment_url' => $this->status === 'pending' ? $this->payment->payment_url : null,
             ]),
 
             // ─── الكوبون ──────────────────────────────────

@@ -9,7 +9,7 @@ interface AdminStatisticsRepositoryInterface
     public function getVehiclesStats(): array;
     public function getBookingsStats(): array;
     public function getRevenueStats(): array;
-    public function getMonthlyBookings(): array;
-    public function getMonthlyRevenue(): array;
+    public function getBookingsStatistics(): array;
+    public function getRevenueStatistics(): array;
     public function getTopPerformers(): array;
 }

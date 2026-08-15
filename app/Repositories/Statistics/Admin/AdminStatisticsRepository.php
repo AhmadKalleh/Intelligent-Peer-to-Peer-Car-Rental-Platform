@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Repositories\Statistics\Admin\Interfaces\AdminStatisticsRepositoryInterface;
 
+use Illuminate\Support\Facades\Storage ;
 
 class AdminStatisticsRepository implements AdminStatisticsRepositoryInterface
 {
@@ -109,6 +110,45 @@ class AdminStatisticsRepository implements AdminStatisticsRepositoryInterface
         ];
     }
 
+    public function getYearlyBookings(): array
+    {
+        $start = now()->subMonths(11)->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $rows = Booking::query()
+            ->selectRaw("
+                DATE_FORMAT(created_at, '%Y-%m') as period,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+            ")
+            ->whereBetween('created_at', [$start, $end])
+            ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
+
+        $result = [];
+
+        $period = $start->copy();
+
+        while ($period <= $end) {
+            $key = $period->format('Y-m');
+
+            $row = $rows->get($key);
+
+            $result[] = [
+                'period'    => $key,
+                'total'     => $row ? (int) $row->total : 0,
+                'completed' => $row ? (int) $row->completed : 0,
+                'cancelled' => $row ? (int) $row->cancelled : 0,
+            ];
+
+            $period->addMonth();
+        }
+
+        return $result;
+    }
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // REVENUE STATS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -156,57 +196,301 @@ class AdminStatisticsRepository implements AdminStatisticsRepositoryInterface
         ];
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MONTHLY BOOKINGS (آخر 12 شهر)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     public function getMonthlyBookings(): array
     {
+        $start = now()->subWeeks(3)->startOfWeek();
+        $end   = now()->endOfWeek();
+
         $data = Booking::query()
             ->selectRaw("
-                DATE_FORMAT(created_at, '%Y-%m') as month,
+                YEAR(created_at) as year,
+                WEEK(created_at, 1) as week,
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
                 SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
             ")
-            ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
-            ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
-            ->orderBy('month', 'asc')
-            ->get();
+            ->whereBetween('created_at', [$start, $end])
+            ->groupByRaw("YEAR(created_at), WEEK(created_at, 1)")
+            ->get()
+            ->keyBy(function ($row) {
+                return sprintf(
+                    '%d-W%02d',
+                    $row->year,
+                    $row->week
+                );
+            });
 
-        return $data->map(fn($row) => [
-            'month'     => $row->month,
-            'total'     => (int) $row->total,
-            'completed' => (int) $row->completed,
-            'cancelled' => (int) $row->cancelled,
-        ])->toArray();
+        $result = [];
+
+        for ($i = 0; $i < 4; $i++) {
+
+            $weekStart = now()
+                ->subWeeks(3 - $i)
+                ->startOfWeek();
+
+            $weekNumber = $weekStart->weekOfYear;
+
+            $period = sprintf(
+                '%d-W%02d',
+                $weekStart->year,
+                $weekNumber
+            );
+
+            $row = $data->get($period);
+
+            $result[] = [
+                'period'    => $period,
+                'total'     => (int) ($row->total ?? 0),
+                'completed' => (int) ($row->completed ?? 0),
+                'cancelled' => (int) ($row->cancelled ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+    public function getWeeklyBookings(): array
+    {
+        $start = now()->subDays(6)->startOfDay();
+        $end   = now()->endOfDay();
+
+        $data = Booking::query()
+            ->selectRaw("
+                DATE(created_at) as period,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+            ")
+            ->whereBetween('created_at', [$start, $end])
+            ->groupByRaw("DATE(created_at)")
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
+
+        $result = [];
+
+        for ($i = 0; $i < 7; $i++) {
+
+            $date = now()
+                ->subDays(6 - $i)
+                ->toDateString();
+
+            $row = $data->get($date);
+
+            $result[] = [
+                'period'    => $date,
+                'total'     => (int) ($row->total ?? 0),
+                'completed' => (int) ($row->completed ?? 0),
+                'cancelled' => (int) ($row->cancelled ?? 0),
+            ];
+        }
+
+        return $result;
+    }
+
+
+    public function getDailyBookings(): array
+    {
+        $row = Booking::query()
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+            ")
+            ->whereDate('created_at', today())
+            ->first();
+
+        return [
+            [
+                'period'    => today()->toDateString(),
+                'total'     => (int) ($row->total ?? 0),
+                'completed' => (int) ($row->completed ?? 0),
+                'cancelled' => (int) ($row->cancelled ?? 0),
+            ]
+        ];
+    }
+
+    public function getBookingsStatistics(): array
+    {
+        return [
+            'yearly'  => $this->getYearlyBookings(),
+            'monthly' => $this->getMonthlyBookings(),
+            'weekly'  => $this->getWeeklyBookings(),
+            'daily'   => $this->getDailyBookings(),
+        ];
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MONTHLY REVENUE (آخر 12 شهر)
+    // REVENUE STATISTICS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function getMonthlyRevenue(): array
+
+    public function getRevenueStatistics(): array
     {
-        $data = Booking::query()
+        return [
+            'yearly'  => $this->getYearlyRevenue(),
+            'monthly' => $this->getMonthlyRevenue(),
+            'weekly'  => $this->getWeeklyRevenue(),
+            'daily'   => $this->getDailyRevenue(),
+        ];
+    }
+
+    public function getYearlyRevenue(): array
+    {
+        $start = now()->subMonths(11)->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $rows = Booking::query()
             ->where('status', 'completed')
-            ->where('created_at', '>=', now()->subMonths(12)->startOfMonth())
+            ->whereBetween('created_at', [$start, $end])
             ->selectRaw("
-                DATE_FORMAT(created_at, '%Y-%m') as month,
-                ROUND(SUM(platform_fee), 2)    as platform_fee,
-                ROUND(SUM(total_amount), 2)    as total_amount,
+                DATE_FORMAT(created_at, '%Y-%m') as period,
+                ROUND(SUM(platform_fee), 2) as platform_fee,
+                ROUND(SUM(total_amount), 2) as total_amount,
                 ROUND(SUM(discount_amount), 2) as discounts
             ")
             ->groupByRaw("DATE_FORMAT(created_at, '%Y-%m')")
-            ->orderBy('month', 'asc')
-            ->get();
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
 
-        return $data->map(fn($row) => [
-            'month'        => $row->month,
-            'platform_fee' => (float) $row->platform_fee,
-            'total_amount' => (float) $row->total_amount,
-            'discounts'    => (float) $row->discounts,
-        ])->toArray();
+        $result = [];
+
+        $period = $start->copy();
+
+        while ($period <= $end) {
+            $key = $period->format('Y-m');
+
+            $row = $rows->get($key);
+
+            $result[] = [
+                'period'       => $key,
+                'platform_fee' => $row ? (float) $row->platform_fee : 0.0,
+                'total_amount' => $row ? (float) $row->total_amount : 0.0,
+                'discounts'    => $row ? (float) $row->discounts : 0.0,
+            ];
+
+            $period->addMonth();
+        }
+
+        return $result;
     }
 
+
+    public function getMonthlyRevenue(): array
+    {
+        $start = now()->subWeeks(3)->startOfWeek();
+        $end = now()->endOfWeek();
+
+        $rows = Booking::query()
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw("
+                YEAR(created_at) as year,
+                WEEK(created_at, 1) as week,
+                ROUND(SUM(platform_fee), 2) as platform_fee,
+                ROUND(SUM(total_amount), 2) as total_amount,
+                ROUND(SUM(discount_amount), 2) as discounts
+            ")
+            ->groupByRaw("YEAR(created_at), WEEK(created_at, 1)")
+            ->orderByRaw("YEAR(created_at), WEEK(created_at, 1)")
+            ->get()
+            ->keyBy(function ($row) {
+                return sprintf(
+                    '%d-W%02d',
+                    $row->year,
+                    $row->week
+                );
+            });
+
+        $result = [];
+
+        $period = $start->copy();
+
+        while ($period <= $end) {
+            $key = sprintf(
+                '%d-W%02d',
+                $period->isoWeekYear,
+                $period->isoWeek
+            );
+
+            $row = $rows->get($key);
+
+            $result[] = [
+                'period'       => $key,
+                'platform_fee' => $row ? (float) $row->platform_fee : 0.0,
+                'total_amount' => $row ? (float) $row->total_amount : 0.0,
+                'discounts'    => $row ? (float) $row->discounts : 0.0,
+            ];
+
+            $period->addWeek();
+        }
+
+        return $result;
+    }
+
+
+    public function getWeeklyRevenue(): array
+    {
+        $start = now()->subDays(6)->startOfDay();
+        $end = now()->endOfDay();
+
+        $rows = Booking::query()
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw("
+                DATE(created_at) as period,
+                ROUND(SUM(platform_fee), 2) as platform_fee,
+                ROUND(SUM(total_amount), 2) as total_amount,
+                ROUND(SUM(discount_amount), 2) as discounts
+            ")
+            ->groupByRaw("DATE(created_at)")
+            ->orderBy('period')
+            ->get()
+            ->keyBy('period');
+
+        $result = [];
+
+        $period = $start->copy();
+
+        while ($period <= $end) {
+            $key = $period->format('Y-m-d');
+
+            $row = $rows->get($key);
+
+            $result[] = [
+                'period'       => $key,
+                'platform_fee' => $row ? (float) $row->platform_fee : 0.0,
+                'total_amount' => $row ? (float) $row->total_amount : 0.0,
+                'discounts'    => $row ? (float) $row->discounts : 0.0,
+            ];
+
+            $period->addDay();
+        }
+
+        return $result;
+    }
+
+    public function getDailyRevenue(): array
+    {
+        $row = Booking::query()
+            ->where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->selectRaw("
+                ROUND(COALESCE(SUM(platform_fee), 0), 2) as platform_fee,
+                ROUND(COALESCE(SUM(total_amount), 0), 2) as total_amount,
+                ROUND(COALESCE(SUM(discount_amount), 0), 2) as discounts
+            ")
+            ->first();
+
+        return [
+            [
+                'period'       => today()->toDateString(),
+                'platform_fee' => (float) $row->platform_fee,
+                'total_amount' => (float) $row->total_amount,
+                'discounts'    => (float) $row->discounts,
+            ]
+        ];
+    }
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // TOP PERFORMERS
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -226,7 +510,7 @@ class AdminStatisticsRepository implements AdminStatisticsRepositoryInterface
                 'total_bookings' => $v->total_bookings,
                 'rating_avg'     => (float) ($v->rating_avg ?? 0),
                 'image'          => $v->primaryImage
-                    ? asset('storage/' . $v->primaryImage->path)
+                    ? url(Storage::url($v->primaryImage->path))
                     : null,
             ]);
 

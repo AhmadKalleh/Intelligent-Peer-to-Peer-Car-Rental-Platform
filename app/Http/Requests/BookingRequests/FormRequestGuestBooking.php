@@ -61,7 +61,8 @@ class FormRequestGuestBooking extends FormRequest
     private function cancelBookingRules(): array
     {
         return [
-            'reason' => ['required', 'string', 'min:5', 'max:500'],
+            'reason' => ['nullable', 'string', 'min:5', 'max:500'],
+            'booking_id' => ['required', 'integer', 'exists:bookings,id'],
         ];
     }
 
