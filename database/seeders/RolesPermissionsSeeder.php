@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Host;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -24,13 +25,13 @@ class RolesPermissionsSeeder extends Seeder
         // 1. Roles
         // ============================================================
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $hostRole  = Role::firstOrCreate(['name' => 'host',  'guard_name' => 'web']);
+        $hostRole  = Role::firstOrCreate(['name' => 'host', 'guard_name' => 'web']);
         $guestRole = Role::firstOrCreate(['name' => 'guest', 'guard_name' => 'web']);
 
         // ============================================================
         // 2. Permissions
         // ============================================================
-
+    
         // Shared by authenticated admin / host / guest.
         $sharedPermissions = [
             'features.index',
@@ -227,6 +228,7 @@ class RolesPermissionsSeeder extends Seeder
             $hostSearchPermissions,
             $hostCouponPermissions,
             $hostBookingPermissions,
+            $conversationPermissions,
         ))));
 
         // Guest: only guest/shared capabilities.
@@ -244,30 +246,218 @@ class RolesPermissionsSeeder extends Seeder
         ))));
 
         // ============================================================
-        // 5. Seed users (idempotent)
+        // 5. Seed users
         // ============================================================
+
+        // ============================================================
+        // RAGHAD - ADMIN
+        // ============================================================
+
         $adminUser = User::firstOrCreate(
-            ['email' => 'admin@carrental.sy'],
+            ['email' => 'raghad@carrental.sy'],
             [
-                'full_name' => 'Admin User',
+                'full_name' => 'Raghad',
                 'password' => Hash::make('password'),
                 'status' => 'active',
                 'auth_provider' => 'local',
                 'email_verified_at' => now(),
             ]
         );
+
         $adminUser->assignRole($adminRole);
 
-        $guestUser = User::firstOrCreate(
-            ['email' => 'guest@carrental.sy'],
+        // ============================================================
+        // YARA - GUEST
+        // ============================================================
+
+        $guestUser1 = User::firstOrCreate(
+            ['email' => 'yara@carrental.sy'],
             [
-                'full_name' => 'Guest User',
+                'full_name' => 'Yara',
                 'password' => Hash::make('password'),
                 'status' => 'active',
                 'auth_provider' => 'local',
                 'email_verified_at' => now(),
             ]
         );
-        $guestUser->assignRole($guestRole);
+
+        $guestUser1->assignRole($guestRole);
+
+        // ============================================================
+        // JAD - GUEST + HOST
+        // ============================================================
+
+        $guestUser2 = User::firstOrCreate(
+            ['email' => 'jad@carrental.sy'],
+            [
+                'full_name' => 'Jad',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // إعطاؤه دوري الـ Guest والـ Host معاً
+        $guestUser2->syncRoles([$guestRole, $hostRole]);
+
+        // إنشاء سجل الـ Host المرتبط بالمستخدم Jad
+        Host::firstOrCreate(
+            ['user_id' => $guestUser2->id],
+            [
+                'total_earnings' => 0,
+                'rating_avg' => 4.95,
+                'total_trips' => 50,
+                'available_balance' => 0,
+                'delivery_available' => true,
+                'delivery_fee_per_km' => 5.00,
+                'is_verified' => true,
+            ]
+        );
+
+        // ============================================================
+        // AHMAD - HOST
+        // ============================================================
+
+        $ahmadUser = User::firstOrCreate(
+            ['email' => 'ahmad@carrental.sy'],
+            [
+                'full_name' => 'Ahmad',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $ahmadUser->assignRole($hostRole);
+
+        Host::firstOrCreate(
+            ['user_id' => $ahmadUser->id],
+            [
+                'total_earnings' => 0,
+                'rating_avg' => 4.95,
+                'total_trips' => 50,
+                'available_balance' => 0,
+                'delivery_available' => true,
+                'delivery_fee_per_km' => 5.00,
+                'is_verified' => true,
+            ]
+        );
+
+        // ============================================================
+        // HAIFA - HOST
+        // ============================================================
+
+        $haifaUser = User::firstOrCreate(
+            ['email' => 'haifa@carrental.sy'],
+            [
+                'full_name' => 'Haifa',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $haifaUser->assignRole($hostRole);
+
+        Host::firstOrCreate(
+            ['user_id' => $haifaUser->id],
+            [
+                'total_earnings' => 0,
+                'rating_avg' => 4.95,
+                'total_trips' => 50,
+                'available_balance' => 0,
+                'delivery_available' => true,
+                'delivery_fee_per_km' => 5.00,
+                'is_verified' => true,
+            ]
+        );
+
+        // ============================================================
+        // SALAH - GUEST
+        // ============================================================
+
+        $salahUser = User::firstOrCreate(
+            ['email' => 'salah@carrental.sy'],
+            [
+                'full_name' => 'Salah',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $salahUser->assignRole($guestRole);
+
+        // ============================================================
+        // GHASSAN - GUEST
+        // ============================================================
+
+        $ghassanUser = User::firstOrCreate(
+            ['email' => 'ghassan@carrental.sy'],
+            [
+                'full_name' => 'Ghassan',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $ghassanUser->assignRole($guestRole);
+
+        // ============================================================
+        // SAEED - GUEST
+        // ============================================================
+
+        $saeedUser = User::firstOrCreate(
+            ['email' => 'saeed@carrental.sy'],
+            [
+                'full_name' => 'Saeed',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $saeedUser->assignRole($guestRole);
+
+        // ============================================================
+        // ADAM - GUEST
+        // ============================================================
+
+        $adamUser = User::firstOrCreate(
+            ['email' => 'adam@carrental.sy'],
+            [
+                'full_name' => 'Adam',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $adamUser->assignRole($guestRole);
+
+        // ============================================================
+        // AYLA - GUEST
+        // ============================================================
+
+        $aylaUser = User::firstOrCreate(
+            ['email' => 'ayla@carrental.sy'],
+            [
+                'full_name' => 'Ayla',
+                'password' => Hash::make('password'),
+                'status' => 'active',
+                'auth_provider' => 'local',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $aylaUser->assignRole($guestRole);
     }
 }

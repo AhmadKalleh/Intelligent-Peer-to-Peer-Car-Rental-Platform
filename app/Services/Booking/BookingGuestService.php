@@ -101,11 +101,11 @@ class BookingGuestService
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // HANDLE WEBHOOK (Paymera → triggerURL)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    public function handleWebhook(array $payload): array
+    public function handleWebhook(array $payload, int $bookingId): array
     {
-        return DB::transaction(function () use ($payload) {
+        return DB::transaction(function () use ($payload,$bookingId) {
 
-            $payment = Payment::where('booking_id', $payload['booking_id'])
+            $payment = Payment::where('booking_id', $bookingId)
                 ->lockForUpdate()
                 ->firstOrFail();
 

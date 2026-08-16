@@ -91,6 +91,8 @@ class LocationTrackingHostService
             'data' => [
                 'booking_status'   => $booking->status,
                 'delivery_address' => $booking->delivery_address,
+                // ← جديد: يفيد لمعرفة هل الغيست أكّد موقعو أو لسا
+                'guest_location_confirmed' => (bool) $location?->guest_lat,
                 'host' => [
                     'lat'        => $location?->host_lat ? (float) $location->host_lat : null,
                     'lng'        => $location?->host_lng ? (float) $location->host_lng : null,

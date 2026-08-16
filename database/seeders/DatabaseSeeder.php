@@ -17,10 +17,11 @@ class DatabaseSeeder extends Seeder
             RolesPermissionsSeeder::class,
             FeatureSeeder::class,
             VehicleSeeder::class,
-            BookingAndReviewSeeder::class,
+            //BookingAndReviewSeeder::class,
             CouponSeeder::class,
+            //ComplaintSeeder::class,
             //CouponUseSeeder::class,
-            StatisticsSeeder::class,
+            //StatisticsSeeder::class,
         ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Services\Booking\BookingGuestService;
 use App\Traits\ResponseHelper\ResponseHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class GuestBookingController extends Controller
@@ -45,16 +46,22 @@ class GuestBookingController extends Controller
     }
 
     // ─── POST /api/payments/webhook (بدون auth) ───────────────
-    public function handleWebhook(Request $request): JsonResponse
-    {
-        $data = [];
-        try {
-            $result = $this->_bookingGuestService->handleWebhook($request->all());
-            return $this->Success($data, 'Webhook processed.', 200);
-        } catch (Throwable $e) {
-            return $this->Error($data, $e->getMessage(), 500);
-        }
-    }
+    public function handleWebhook(Request $request): JsonResponse {
+ $data = [];
+ try {
+
+
+
+ $bookingId = (int) $request->query('booking_id');
+
+$result = $this->_bookingGuestService->handleWebhook($request->all(), $bookingId);
+return $this->Success([], $result['status'], 200);
+
+ } catch (Throwable $e) {
+ Log::error('❌ Webhook Error', ['error' => $e->getMessage()]);
+ return $this->Error($data, $e->getMessage(), 500);
+ }
+ }
 
     // ─── DELETE /api/bookings/{id} ────────────────────────────
     public function cancelBooking(FormRequestGuestBooking $request): JsonResponse
